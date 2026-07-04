@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Datenbank wählen · sql üben</title>
+<meta name="description" content="Alle Übungsdatenbanken auf einen Blick, sortiert von leicht bis schwer, jede mit eigenem Schema, eigenen Aufgaben und Schwierigkeitslevel.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/index.html" class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <ellipse cx="16" cy="7" rx="12" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 7 V25 C4 27.3 9.4 29.2 16 29.2 C22.6 29.2 28 27.3 28 25 V7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 16 C4 18.3 9.4 20.2 16 20.2 C22.6 20.2 28 18.3 28 16" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </span>
+      <span class="brand-word">sql<em>üben</em></span>
+    </a>
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <a href="/datenbanken.html" class="active-link">Datenbanken</a>
+      <a href="/referenz.html">Referenz</a>
+      <span class="nav-progress" id="navProgress" title="Gelöste Aufgaben">0 / 0 gelöst</span>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="section-inner">
+    <p class="eyebrow">Von leicht bis schwer</p>
+    <h1 class="page-title">Datenbank wählen</h1>
+    <p class="section-sub">Jede Datenbank hat ihre eigene Seite: eigenes Schema, eigene Übungsaufgaben und eigener Schwierigkeitsverlauf. Sortiert nach Level, starte oben, wenn du unsicher bist.</p>
+    <div class="level-legend">
+      <span class="ex-diff diff-1">leicht</span>
+      <span class="ex-diff diff-2">mittel</span>
+      <span class="ex-diff diff-3">schwer</span>
+    </div>
+  </div>
+</section>
+
+<section class="db-picker">
+  <div class="section-inner">
+    <div class="db-grid" id="dbGrid"><!-- injected by datenbanken-page.js --></div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="section-inner footer-inner">
+    <p><a href="/referenz.html">Kurzreferenz ansehen</a> &middot; <a href="/index.html">Zur Startseite</a></p>
+    <p class="footer-tech">cooked in the dark by <a href="https://github.com/bahadirsulukan" target="_blank" rel="noopener">Bahadir</a> 🌚</p>
+  </div>
+</footer>
+
+<script src="/js/databases.js"></script>
+<script src="/js/exercises.js"></script>
+<script src="/js/shared.js"></script>
+<script src="/js/datenbanken-page.js"></script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kino · sql üben</title>
+<meta name="description" content="SQL-Übungsaufgaben zur Datenbank Kino: Schema, Konsole und automatische Prüfung.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body data-db-id="kino">
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/index.html" class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <ellipse cx="16" cy="7" rx="12" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 7 V25 C4 27.3 9.4 29.2 16 29.2 C22.6 29.2 28 27.3 28 25 V7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 16 C4 18.3 9.4 20.2 16 20.2 C22.6 20.2 28 18.3 28 16" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </span>
+      <span class="brand-word">sql<em>üben</em></span>
+    </a>
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <a href="/datenbanken.html" class="active-link">Datenbanken</a>
+      <a href="/referenz.html" id="refNavLink">Referenz</a>
+      <span class="nav-progress" id="navProgress" title="Gelöste Aufgaben">0 / 0 gelöst</span>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero db-page-hero">
+  <div class="section-inner">
+    <p class="breadcrumb"><a href="/datenbanken.html">Datenbanken</a> / Kino</p>
+    <h1 class="page-title">Kino</h1>
+  </div>
+</section>
+
+<section class="schema-view">
+  <div class="section-inner">
+    <h2 class="section-title"><span class="section-num">01</span> Schema</h2>
+    <div class="schema-grid" id="schemaGrid"></div>
+  </div>
+</section>
+
+<section class="console-section" id="konsole">
+  <div class="section-inner">
+    <h2 class="section-title"><span class="section-num">02</span> Konsole</h2>
+
+    <div class="exercise-bar" id="exerciseBar">
+      <button class="ex-nav" id="exPrev" aria-label="Vorherige Aufgabe">&larr;</button>
+      <div class="exercise-current">
+        <span class="ex-index" id="exIndex">Aufgabe 1 / 1</span>
+        <p class="ex-text" id="exText">Lade Aufgaben...</p>
+        <div class="ex-meta">
+          <span class="ex-diff" id="exDiff"></span>
+          <button class="ex-hint-btn" id="exHintBtn">Hinweis</button>
+          <button class="ex-solution-btn" id="exSolutionBtn">Lösung zeigen</button>
+          <button class="ex-hint-btn" id="refBtn" title="Kurzreferenz öffnen, ohne deine Abfrage zu verlieren">Kurzreferenz</button>
+        </div>
+        <p class="ex-hint" id="exHint" hidden></p>
+      </div>
+      <button class="ex-nav" id="exNext" aria-label="Nächste Aufgabe">&rarr;</button>
+    </div>
+
+    <div class="console-grid">
+      <div class="editor-pane">
+        <div class="editor-toolbar">
+          <span class="editor-label">SELECT-Abfrage</span>
+          <div class="editor-actions">
+            <button id="runBtn" class="btn btn-run">Ausführen <kbd>&#8984;/Ctrl</kbd>+<kbd>&#9166;</kbd></button>
+            <button id="clearBtn" class="btn btn-plain">Leeren</button>
+          </div>
+        </div>
+        <div id="sqlEditor" class="sql-editor" aria-label="SQL-Eingabe"></div>
+        <div id="checkBanner" class="check-banner" hidden></div>
+      </div>
+
+      <div class="result-pane">
+        <div class="result-toolbar">
+          <span class="editor-label">Ergebnis</span>
+          <span class="result-meta" id="resultMeta"></span>
+        </div>
+        <div class="result-scroll" id="resultArea">
+          <p class="result-placeholder">Noch keine Abfrage ausgeführt.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="section-inner footer-inner">
+    <p><a href="/referenz.html">Kurzreferenz ansehen</a> &middot; <a href="/datenbanken.html">Zu allen Datenbanken</a></p>
+    <p class="footer-tech">cooked in the dark by <a href="https://github.com/bahadirsulukan" target="_blank" rel="noopener">Bahadir</a> 🌚</p>
+  </div>
+</footer>
+
+  <div class="ref-panel-overlay" id="refPanelOverlay">
+    <div class="ref-panel" role="dialog" aria-modal="true" aria-label="Kurzreferenz">
+      <div class="ref-panel-header">
+        <h2>Kurzreferenz</h2>
+        <span class="ref-panel-hint">Esc oder Klick daneben zum Schließen</span>
+        <button class="ref-panel-close" id="refPanelClose" aria-label="Schließen">&times;</button>
+      </div>
+      <div class="ref-panel-body" id="refPanelBody"></div>
+    </div>
+  </div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<script src="/js/reference-data.js"></script>
+<script src="/js/reference-view.js"></script>
+<script type="module" src="/src/sql-editor.js"></script>
+<script src="/js/databases.js"></script>
+<script src="/js/exercises.js"></script>
+<script src="/js/shared.js"></script>
+<script src="/js/db-page.js"></script>
+</body>
+</html>

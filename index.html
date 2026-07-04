@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>sql üben · Interaktives SQL-Praxislabor</title>
+<meta name="description" content="Übe SQL-Abfragen direkt im Browser: JOINs, GROUP BY, Subqueries und mehr, mit echten Datenbanken und sofortiger Rückmeldung.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/index.html" class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <ellipse cx="16" cy="7" rx="12" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 7 V25 C4 27.3 9.4 29.2 16 29.2 C22.6 29.2 28 27.3 28 25 V7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 16 C4 18.3 9.4 20.2 16 20.2 C22.6 20.2 28 18.3 28 16" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </span>
+      <span class="brand-word">sql<em>üben</em></span>
+    </a>
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <a href="/datenbanken.html">Datenbanken</a>
+      <a href="/referenz.html">Referenz</a>
+      <span class="nav-progress" id="navProgress" title="Gelöste Aufgaben">0 / 0 gelöst</span>
+    </nav>
+  </div>
+</header>
+
+<section class="hero" id="top">
+  <div class="hero-inner">
+    <div class="hero-copy">
+      <p class="eyebrow">Datenbanken &middot; Übungslabor</p>
+      <h1>Schreib die Query.<br>Sieh das Ergebnis.<br><span class="accent">Sofort.</span></h1>
+      <p class="hero-lede">Zehn echte Übungsdatenbanken, vom Einzeltabellen-Einstieg bis zu Self-JOINs, ein Editor pro Datenbank, keine Installation. Jede Abfrage läuft direkt in deinem Browser gegen eine echte SQL-Engine, genau wie in der Klausur, nur mit sofortiger Rückmeldung statt Rotstift.</p>
+      <div class="hero-actions">
+        <a href="/datenbanken.html" class="btn btn-primary">Datenbank wählen</a>
+        <a href="/referenz.html" class="btn btn-ghost">Zur Kurzreferenz</a>
+      </div>
+    </div>
+    <div class="hero-visual" aria-hidden="true">
+      <svg id="erdSvg" viewBox="0 0 420 360" class="erd-svg"></svg>
+    </div>
+  </div>
+  <div class="hero-rule"></div>
+</section>
+
+<section class="stats-bar">
+  <div class="section-inner stats-inner">
+    <div class="stat-item">
+      <span class="stat-num" id="statDbCount">0</span>
+      <span class="stat-label">Datenbanken</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="statExCount">0</span>
+      <span class="stat-label">Übungsaufgaben</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-num" id="statLevelCount">0</span>
+      <span class="stat-label">Schwierigkeitsstufen</span>
+    </div>
+  </div>
+</section>
+
+<section class="preview-section">
+  <div class="section-inner">
+    <h2 class="section-title"><span class="section-num">02</span> So sieht's aus</h2>
+    <p class="section-sub">Editor links, Ergebnis rechts: sofort nach dem Ausführen, ganz ohne eigenes Zutun.</p>
+    <div class="console-grid preview-grid" aria-hidden="true">
+      <div class="editor-pane">
+        <div class="editor-toolbar">
+          <span class="editor-label">SELECT-Abfrage</span>
+          <span class="preview-run-badge">Ausführen <kbd>&#8984;/Ctrl</kbd>+<kbd>&#9166;</kbd></span>
+        </div>
+        <pre class="preview-code"><code><span class="kw">SELECT</span> Firma, <span class="kw">COUNT</span>(*) <span class="kw">AS</span> Anzahl
+<span class="kw">FROM</span> Kunde k <span class="kw">JOIN</span> Bestellung b
+  <span class="kw">ON</span> k.KundenCode = b.KundenCode
+<span class="kw">GROUP BY</span> Firma
+<span class="kw">ORDER BY</span> Anzahl <span class="kw">DESC</span>
+<span class="kw">LIMIT</span> 4;</code></pre>
+      </div>
+      <div class="result-pane">
+        <div class="result-toolbar">
+          <span class="editor-label">Ergebnis</span>
+          <span class="result-meta">4 Zeilen</span>
+        </div>
+        <table class="result-table">
+          <thead><tr><th>Firma</th><th>Anzahl</th></tr></thead>
+          <tbody>
+            <tr><td>Rattlesnake Canyon Grocery</td><td>2</td></tr>
+            <tr><td>Hanari Carnes</td><td>2</td></tr>
+            <tr><td>Wellington Importadora</td><td>1</td></tr>
+            <tr><td>Supremes delices</td><td>1</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="section-inner footer-inner">
+    <p>Gebaut zum Üben, nicht zum Auswendiglernen.</p>
+    <p class="footer-tech">SQLite via sql.js &middot; keine Anmeldung &middot; kein Tracking</p>
+    <p class="footer-tech">cooked in the dark by <a href="https://github.com/bahadirsulukan" target="_blank" rel="noopener">Bahadir</a> 🌚</p>
+  </div>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.10.3/sql-wasm.js"></script>
+<script src="/js/databases.js"></script>
+<script src="/js/exercises.js"></script>
+<script src="/js/shared.js"></script>
+<script src="/js/home.js"></script>
+</body>
+</html>

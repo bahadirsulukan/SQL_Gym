@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kurzreferenz · sql üben</title>
+<meta name="description" content="SQL-Kurzreferenz: Abarbeitungsreihenfolge, JOINs, Self-JOIN, Subqueries, LIKE-Muster, CASE WHEN, NULL-Fallen, Datum, DML und mehr, alles auf einer Seite zum schnellen Nachschlagen.">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/css/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="header-inner">
+    <a href="/index.html" class="brand">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 32 32" width="26" height="26">
+          <ellipse cx="16" cy="7" rx="12" ry="4.2" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 7 V25 C4 27.3 9.4 29.2 16 29.2 C22.6 29.2 28 27.3 28 25 V7" fill="none" stroke="currentColor" stroke-width="1.6"/>
+          <path d="M4 16 C4 18.3 9.4 20.2 16 20.2 C22.6 20.2 28 18.3 28 16" fill="none" stroke="currentColor" stroke-width="1.6"/>
+        </svg>
+      </span>
+      <span class="brand-word">sql<em>üben</em></span>
+    </a>
+    <nav class="main-nav" aria-label="Hauptnavigation">
+      <a href="/datenbanken.html">Datenbanken</a>
+      <a href="/referenz.html" class="active-link">Referenz</a>
+      <span class="nav-progress" id="navProgress" title="Gelöste Aufgaben">0 / 0 gelöst</span>
+    </nav>
+  </div>
+</header>
+
+<section class="page-hero">
+  <div class="section-inner">
+    <p class="eyebrow">Nachschlagen statt auswendig lernen</p>
+    <h1 class="page-title">Kurzreferenz</h1>
+    <p class="section-sub">Das Cheat-Sheet für nebenbei: kurz reinschauen während du eine Aufgabe löst, statt lange zu suchen. Die häufigsten Muster, Fallen und Bausteine, alles auf einer Seite. Auf den Datenbankseiten öffnet sich diese Referenz auch als Panel, ohne dass deine Abfrage verloren geht.</p>
+    <div id="refNavMount"></div>
+  </div>
+</section>
+
+<section class="reference">
+  <div class="section-inner" id="refSectionsMount"></div>
+</section>
+
+<footer class="site-footer">
+  <div class="section-inner footer-inner">
+    <p>Gebaut zum Üben, nicht zum Auswendiglernen.</p>
+    <p class="footer-tech">SQLite via sql.js &middot; keine Anmeldung &middot; kein Tracking</p>
+    <p class="footer-tech">cooked in the dark by <a href="https://github.com/bahadirsulukan" target="_blank" rel="noopener">Bahadir</a> 🌚</p>
+  </div>
+</footer>
+
+<script src="/js/databases.js"></script>
+<script src="/js/exercises.js"></script>
+<script src="/js/shared.js"></script>
+<script src="/js/reference-data.js"></script>
+<script src="/js/reference-view.js"></script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  SqlUeben.renderNavProgress();
+  document.getElementById("refNavMount").innerHTML = ReferenceView.renderNav();
+  document.getElementById("refSectionsMount").innerHTML = ReferenceView.renderSections();
+});
+</script>
+</body>
+</html>
