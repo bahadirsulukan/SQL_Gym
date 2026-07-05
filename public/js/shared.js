@@ -121,17 +121,49 @@ const SqlUeben = (function () {
   function totalSolved() {
     return DATABASES.reduce((sum, db) => sum + solvedCount(db.id), 0);
   }
+  function resetProgress() {
+    localStorage.removeItem("sqluebenProgress");
+  }
 
   /* ---------------------------------------------------------------- nav badge */
   function renderNavProgress() {
     const el = document.getElementById("navProgress");
-    if (el) el.textContent = `${totalSolved()} / ${totalCount()} gelöst`;
+    if (!el) return;
+    el.textContent = `${totalSolved()} / ${totalCount()} gelöst`;
+
+    // Klick auf das Badge setzt den gesamten Fortschritt zurueck (mit Rueckfrage).
+    // dataset-Flag verhindert doppeltes Binden, falls renderNavProgress mehrfach laeuft.
+    if (!el.dataset.resetWired) {
+      el.dataset.resetWired = "true";
+      el.title = "Klicken, um deinen gesamten Fortschritt zurückzusetzen";
+      el.addEventListener("click", () => {
+        const sure = window.confirm(
+          "Wirklich deinen gesamten Fortschritt (alle Datenbanken) zurücksetzen? Das kann nicht rückgängig gemacht werden."
+        );
+        if (sure) {
+          resetProgress();
+          window.location.reload();
+        }
+      });
+    }
+  }
+
+  /* ---------------------------------------------------------------- back-to-top */
+  // scrollEl: das scrollende Element (z.B. das Referenz-Panel). Weggelassen -> window/Seite.
+  function wireBackToTop(button, scrollEl) {
+    if (!button) return;
+    const target = scrollEl || window;
+    const getScrollTop = () => (target === window ? window.scrollY : target.scrollTop);
+    const onScroll = () => button.classList.toggle("is-visible", getScrollTop() > 400);
+    target.addEventListener("scroll", onScroll);
+    button.addEventListener("click", () => target.scrollTo({ top: 0, behavior: "smooth" }));
+    onScroll();
   }
 
   return {
     bootSqlJsEngine, execQuery, formatCell, normalizeRows, formatSql,
     rowsMatchExact, rowsMatchAsSet,
     loadProgress, saveProgress, markSolved, isSolved, solvedCount, totalCount, totalSolved,
-    renderNavProgress
+    resetProgress, renderNavProgress, wireBackToTop
   };
 })();

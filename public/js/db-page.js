@@ -161,6 +161,7 @@
   function openRefPanel() {
     if (!refPanelRendered) {
       els.refPanelBody.innerHTML = ReferenceView.renderNav() + ReferenceView.renderSections();
+      SqlUeben.wireBackToTop(document.getElementById("refBackToTop"), els.refPanelOverlay.querySelector(".ref-panel"));
       refPanelRendered = true;
     }
     els.refPanelOverlay.classList.add("open");
@@ -189,10 +190,22 @@
       showBanner("info", "Lösung eingefügt, klicke „Ausführen“, um sie zu testen.");
     });
     els.exPrev.addEventListener("click", () => {
-      if (state.currentExIndex > 0) { state.currentExIndex--; renderExercise(); els.checkBanner.hidden = true; }
+      if (state.currentExIndex > 0) {
+        state.currentExIndex--;
+        renderExercise();
+        editor.setValue("");
+        renderResultPlaceholder();
+        els.checkBanner.hidden = true;
+      }
     });
     els.exNext.addEventListener("click", () => {
-      if (state.currentExIndex < exercises.length - 1) { state.currentExIndex++; renderExercise(); els.checkBanner.hidden = true; }
+      if (state.currentExIndex < exercises.length - 1) {
+        state.currentExIndex++;
+        renderExercise();
+        editor.setValue("");
+        renderResultPlaceholder();
+        els.checkBanner.hidden = true;
+      }
     });
 
     els.refBtn.addEventListener("click", openRefPanel);

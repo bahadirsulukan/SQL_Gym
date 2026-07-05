@@ -1,4 +1,4 @@
-# sql üben: Interaktives SQL-Praxislabor
+# SQLgym: Interaktives SQL-Praxislabor
 
 Eine kleine, selbst gehostete Website zum Üben von SQL-Abfragen direkt im Browser.
 Keine Installation eines Datenbank-Servers nötig, alles läuft clientseitig über
@@ -6,10 +6,10 @@ Keine Installation eines Datenbank-Servers nötig, alles läuft clientseitig üb
 
 ## Lokal starten (mit npm)
 
-1. Diesen Ordner nach `~/Desktop/MyProjects/sql-ueben` (oder wohin auch immer) verschieben.
+1. Diesen Ordner nach `~/Desktop/MyProjects/sqlgym` (oder wohin auch immer) verschieben.
 2. Im Terminal in den Ordner wechseln:
    ```bash
-   cd ~/Desktop/MyProjects/sql-ueben
+   cd ~/Desktop/MyProjects/sqlgym
    npm install
    npm run dev
    ```

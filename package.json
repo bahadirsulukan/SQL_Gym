@@ -1,5 +1,5 @@
 {
-  "name": "sql-ueben",
+  "name": "sqlgym",
   "version": "1.0.0",
   "description": "Interaktives SQL-Praxislabor - lokal per Vite ausgefuehrt",
   "private": true,
