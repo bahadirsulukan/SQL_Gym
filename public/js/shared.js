@@ -125,6 +125,28 @@ const SqlUeben = (function () {
     localStorage.removeItem("sqluebenProgress");
   }
 
+  /* ---------------------------------------------------------- normalization progress */
+  // Eigener localStorage-Key, komplett getrennt von der SQL-Aufgaben-Zaehlung (69),
+  // da Normalisierungsaufgaben konzeptionell etwas anderes sind.
+  function loadNormProgress() {
+    try { return JSON.parse(localStorage.getItem("sqluebenNormProgress") || "{}"); }
+    catch (e) { return {}; }
+  }
+  function saveNormProgress(p) {
+    localStorage.setItem("sqluebenNormProgress", JSON.stringify(p));
+  }
+  function markNormSolved(exId) {
+    const p = loadNormProgress();
+    p[exId] = true;
+    saveNormProgress(p);
+  }
+  function isNormSolved(exId) {
+    return !!loadNormProgress()[exId];
+  }
+  function normSolvedCount() {
+    return Object.keys(loadNormProgress()).length;
+  }
+
   /* ---------------------------------------------------------------- nav badge */
   function renderNavProgress() {
     const el = document.getElementById("navProgress");
@@ -164,6 +186,7 @@ const SqlUeben = (function () {
     bootSqlJsEngine, execQuery, formatCell, normalizeRows, formatSql,
     rowsMatchExact, rowsMatchAsSet,
     loadProgress, saveProgress, markSolved, isSolved, solvedCount, totalCount, totalSolved,
-    resetProgress, renderNavProgress, wireBackToTop
+    resetProgress, renderNavProgress, wireBackToTop,
+    markNormSolved, isNormSolved, normSolvedCount
   };
 })();

@@ -17,6 +17,7 @@ export default defineConfig({
         main: resolve(__dirname, 'index.html'),
         datenbankenUebersicht: resolve(__dirname, 'datenbanken.html'),
         referenz: resolve(__dirname, 'referenz.html'),
+        normalisierung: resolve(__dirname, 'normalisierung.html'),
         cia: resolve(__dirname, 'datenbanken/cia.html'),
         f1: resolve(__dirname, 'datenbanken/f1.html'),
         schule: resolve(__dirname, 'datenbanken/schule.html'),
