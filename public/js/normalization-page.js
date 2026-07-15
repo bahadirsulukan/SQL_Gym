@@ -111,7 +111,7 @@
     const selected = state.selectedAttr === key ? " is-selected" : "";
     const count = tablesContaining(key).length;
     const badge = count > 0 ? `<span class="attr-chip-count" title="In ${count} Tabelle(n) verwendet">${count}</span>` : "";
-    return `<button class="pool-attr${selected}" data-attr="${key}">${a.label} <span class="pool-attr-type">${a.type}</span>${badge}</button>`;
+    return `<button class="pool-attr${selected}" draggable="true" data-attr="${key}">${a.label} <span class="pool-attr-type">${a.type}</span>${badge}</button>`;
   }
 
   function schemaRowEditableHtml(key, table) {
@@ -143,7 +143,7 @@
             <button class="norm-table-remove" data-remove-table="${t.id}" aria-label="Tabelle entfernen">&times;</button>
           </div>
           <div class="norm-table-body" data-drop-target="${t.id}">
-            ${rows || '<span class="norm-empty-note">Attribut im Pool anklicken, dann hier klicken</span>'}
+            ${rows || '<span class="norm-empty-note">Attribut hierher ziehen oder im Pool anklicken, dann hier klicken</span>'}
           </div>
         </div>
       `;
@@ -167,12 +167,28 @@
         state.selectedAttr = state.selectedAttr === key ? null : key;
         renderEditor();
       });
+      btn.addEventListener("dragstart", e => {
+        e.dataTransfer.setData("text/plain", btn.dataset.attr);
+        e.dataTransfer.effectAllowed = "copy";
+      });
     });
 
     document.querySelectorAll("[data-drop-target]").forEach(zone => {
       zone.addEventListener("click", e => {
         if (e.target.closest("[data-toggle-pk]") || e.target.closest("[data-remove-attr]")) return;
         if (state.selectedAttr) addAttrToTable(state.selectedAttr, zone.dataset.dropTarget);
+      });
+      zone.addEventListener("dragover", e => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = "copy";
+        zone.classList.add("is-dragover");
+      });
+      zone.addEventListener("dragleave", () => zone.classList.remove("is-dragover"));
+      zone.addEventListener("drop", e => {
+        e.preventDefault();
+        zone.classList.remove("is-dragover");
+        const key = e.dataTransfer.getData("text/plain");
+        if (key) addAttrToTable(key, zone.dataset.dropTarget);
       });
     });
 
