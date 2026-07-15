@@ -1,12 +1,11 @@
 /* ==========================================================================
    NORMALIZATION PAGE
-   Interactive decomposition editor: drag (or click-to-assign) attributes into
-   user-created tables, mark primary keys, then "Prüfen" runs the engine
-   (normalization-engine.js) against the exercise's given FDs (normalization-data.js).
-
-   Attributes can belong to MULTIPLE tables at once (foreign keys have to be
-   duplicated to link fragments back together) - the attribute pool is a
-   permanent palette, not a single-location bucket.
+   Given relation is shown as an exam-style schema box (column, type,
+   description, PK marked) - click an attribute in the pool, then click a
+   table to add it there (an attribute can belong to multiple tables at
+   once, since foreign/shared keys have to be duplicated to link fragments
+   back together). "Prüfen" runs the engine (normalization-engine.js)
+   against the exercise's given FDs (normalization-data.js).
    ========================================================================== */
 
 (function () {
@@ -43,8 +42,11 @@
     return NORMALIZATION_EXERCISES[state.currentIndex];
   }
 
+  function attr(key) {
+    return currentExercise().attributes.find(x => x.key === key);
+  }
   function attrLabel(key) {
-    const a = currentExercise().attributes.find(x => x.key === key);
+    const a = attr(key);
     return a ? a.label : key;
   }
 
@@ -69,61 +71,70 @@
     return { id: "t" + (state.nextTableNum++), name, attrs: new Set(), pk: new Set() };
   }
 
-  function tablesContaining(attr) {
-    return state.tables.filter(t => t.attrs.has(attr));
+  function tablesContaining(key) {
+    return state.tables.filter(t => t.attrs.has(key));
   }
 
-  /* ------------------------------------------------------------ rendering */
+  /* ------------------------------------------------------------ rendering: given relation */
   function renderSource() {
     const ex = currentExercise();
     const fdText = ex.fds
       .map(fd => `${fd.lhs.map(attrLabel).join(", ")} &rarr; ${fd.rhs.map(attrLabel).join(", ")}`)
       .join("<br>");
-    const headerRow = ex.attributes
-      .map(a => `<th>${a.label}${ex.keyAttrs.includes(a.key) ? ' <span class="fk-mark">pk</span>' : ""}</th>`)
-      .join("");
-    const rows = ex.sampleRows
-      .map(row => `<tr>${row.map(c => `<td>${c}</td>`).join("")}</tr>`)
-      .join("");
+    const rows = ex.attributes.map(a => `
+      <div class="schema-row${ex.keyAttrs.includes(a.key) ? " is-pk" : ""}">
+        <span class="schema-row-name">${a.label}</span>
+        <span class="schema-row-type">${a.type}</span>
+        <span class="schema-row-desc">${a.description}</span>
+      </div>
+    `).join("");
 
     els.normSource.innerHTML = `
-      <div class="norm-source-grid">
-        <div class="norm-fds">
-          <span class="editor-label">Funktionale Abhängigkeiten (gegeben)</span>
-          <p class="norm-fd-list">${fdText}</p>
+      <div class="norm-schema-box">
+        <div class="norm-schema-title">${ex.title}</div>
+        <div class="schema-row schema-row-head">
+          <span>Spalte</span><span>Typ</span><span>Beschreibung</span>
         </div>
-        <div class="norm-sample-wrap">
-          <span class="editor-label">Beispieldaten (0NF)</span>
-          <div class="result-scroll">
-            <table class="result-table"><thead><tr>${headerRow}</tr></thead><tbody>${rows}</tbody></table>
-          </div>
-        </div>
+        ${rows}
+      </div>
+      <div class="norm-fds">
+        <span class="editor-label">Gegebene funktionale Abhängigkeiten</span>
+        <p class="norm-fd-list">${fdText}</p>
       </div>
     `;
   }
 
-  function poolChipHtml(key) {
+  /* ------------------------------------------------------------ rendering: pool + editor tables */
+  function poolAttrHtml(key) {
+    const a = attr(key);
     const selected = state.selectedAttr === key ? " is-selected" : "";
     const count = tablesContaining(key).length;
     const badge = count > 0 ? `<span class="attr-chip-count" title="In ${count} Tabelle(n) verwendet">${count}</span>` : "";
-    return `<div class="attr-chip${selected}" draggable="true" data-attr="${key}">${attrLabel(key)}${badge}</div>`;
+    return `<button class="pool-attr${selected}" data-attr="${key}">${a.label} <span class="pool-attr-type">${a.type}</span>${badge}</button>`;
   }
 
-  function tableChipHtml(key, table) {
-    const selected = state.selectedAttr === key ? " is-selected" : "";
-    const pkBtn = `<button class="attr-pk-toggle" data-toggle-pk="${key}" data-table="${table.id}" title="Teil des Primärschlüssels?">${table.pk.has(key) ? "🔑" : "○"}</button>`;
-    const removeBtn = `<button class="attr-chip-remove" data-remove-attr="${key}" data-table="${table.id}" title="Nur aus dieser Tabelle entfernen">&times;</button>`;
-    return `<div class="attr-chip${selected}" draggable="true" data-attr="${key}" data-from-table="${table.id}">${pkBtn}${attrLabel(key)}${removeBtn}</div>`;
+  function schemaRowEditableHtml(key, table) {
+    const a = attr(key);
+    const isPk = table.pk.has(key);
+    return `
+      <div class="schema-row${isPk ? " is-pk" : ""}" data-attr="${key}">
+        <span class="schema-row-name">${a.label}</span>
+        <span class="schema-row-type">${a.type}</span>
+        <label class="schema-row-pk">
+          <input type="checkbox" data-toggle-pk="${key}" data-table="${table.id}" ${isPk ? "checked" : ""}> PK
+        </label>
+        <button class="schema-row-remove" data-remove-attr="${key}" data-table="${table.id}" title="Aus dieser Tabelle entfernen">&times;</button>
+      </div>
+    `;
   }
 
   function renderEditor() {
     const ex = currentExercise();
 
-    els.normPool.innerHTML = ex.attributes.map(a => poolChipHtml(a.key)).join("");
-    els.normPool.dataset.dropTarget = "pool";
+    els.normPool.innerHTML = ex.attributes.map(a => poolAttrHtml(a.key)).join("");
 
     els.normTables.innerHTML = state.tables.map(t => {
-      const chips = [...t.attrs].map(k => tableChipHtml(k, t)).join("");
+      const rows = [...t.attrs].map(k => schemaRowEditableHtml(k, t)).join("");
       return `
         <div class="norm-table-card">
           <div class="norm-table-header">
@@ -131,7 +142,7 @@
             <button class="norm-table-remove" data-remove-table="${t.id}" aria-label="Tabelle entfernen">&times;</button>
           </div>
           <div class="norm-table-body" data-drop-target="${t.id}">
-            ${chips || '<span class="norm-empty-note">Attribute hierher ziehen oder klicken</span>'}
+            ${rows || '<span class="norm-empty-note">Attribut im Pool anklicken, dann hier klicken</span>'}
           </div>
         </div>
       `;
@@ -140,9 +151,8 @@
     wireEditorEvents();
   }
 
-  /* ------------------------------------------------------------ drag + click assignment */
+  /* ------------------------------------------------------------ click-to-assign */
   function addAttrToTable(key, tableId) {
-    if (!key || tableId === "pool") { state.selectedAttr = null; renderEditor(); return; }
     const table = state.tables.find(t => t.id === tableId);
     if (table) table.attrs.add(key);
     state.selectedAttr = null;
@@ -150,38 +160,27 @@
   }
 
   function wireEditorEvents() {
-    document.querySelectorAll(".attr-chip").forEach(chip => {
-      chip.addEventListener("dragstart", e => {
-        e.dataTransfer.setData("text/plain", chip.dataset.attr);
-      });
-      chip.addEventListener("click", e => {
-        if (e.target.closest("[data-toggle-pk]") || e.target.closest("[data-remove-attr]")) return;
-        const key = chip.dataset.attr;
+    document.querySelectorAll(".pool-attr").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.attr;
         state.selectedAttr = state.selectedAttr === key ? null : key;
         renderEditor();
       });
     });
 
     document.querySelectorAll("[data-drop-target]").forEach(zone => {
-      zone.addEventListener("dragover", e => { e.preventDefault(); zone.classList.add("is-dragover"); });
-      zone.addEventListener("dragleave", () => zone.classList.remove("is-dragover"));
-      zone.addEventListener("drop", e => {
-        e.preventDefault();
-        zone.classList.remove("is-dragover");
-        const key = e.dataTransfer.getData("text/plain");
-        addAttrToTable(key, zone.dataset.dropTarget);
-      });
       zone.addEventListener("click", e => {
-        if (e.target.closest(".attr-chip")) return;
+        if (e.target.closest("[data-toggle-pk]") || e.target.closest("[data-remove-attr]")) return;
         if (state.selectedAttr) addAttrToTable(state.selectedAttr, zone.dataset.dropTarget);
       });
     });
 
-    document.querySelectorAll("[data-toggle-pk]").forEach(btn => {
-      btn.addEventListener("click", e => {
+    document.querySelectorAll("[data-toggle-pk]").forEach(input => {
+      input.addEventListener("click", e => e.stopPropagation());
+      input.addEventListener("change", e => {
         e.stopPropagation();
-        const table = state.tables.find(t => t.id === btn.dataset.table);
-        const key = btn.dataset.togglePk;
+        const table = state.tables.find(t => t.id === input.dataset.table);
+        const key = input.dataset.togglePk;
         if (table.pk.has(key)) table.pk.delete(key); else table.pk.add(key);
         renderEditor();
       });
@@ -240,7 +239,7 @@
     }
     const missingPk = usedTables.filter(t => t.pk.size === 0);
     if (missingPk.length > 0) {
-      html += `<p class="check-banner err">Kein Primärschlüssel markiert für: ${missingPk.map(t => t.name).join(", ")} (○-Symbol an den Attributen anklicken, um es zu 🔑 zu machen).</p>`;
+      html += `<p class="check-banner err">Kein Primärschlüssel markiert für: ${missingPk.map(t => t.name).join(", ")} (PK-Checkbox an den Attributen anklicken).</p>`;
     }
 
     html += `<div class="norm-result-tables">`;
