@@ -29,6 +29,7 @@
     exNext: document.getElementById("exNext"),
     normProgress: document.getElementById("normProgress"),
     normSource: document.getElementById("normSource"),
+    normTaskBody: document.getElementById("normTaskBody"),
     normPool: document.getElementById("normPool"),
     normTables: document.getElementById("normTables"),
     addTableBtn: document.getElementById("addTableBtn"),
@@ -315,6 +316,7 @@
     els.exHint.textContent = `${ex.hint} ${ex.goal}`;
     els.exPrev.disabled = state.currentIndex === 0;
     els.exNext.disabled = state.currentIndex === NORMALIZATION_EXERCISES.length - 1;
+    els.normTaskBody.innerHTML = ex.task;
     renderSource();
     renderEditor();
   }

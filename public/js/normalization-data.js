@@ -2,10 +2,11 @@
    NORMALIZATION EXERCISES
    Jede Aufgabe gibt eine unnormalisierte Relation als Schema-Box (Spalte, Typ,
    Beschreibung, PK-Komponenten) - genau wie in echten Klausuraufgaben - plus
-   die dafuer geltenden funktionalen Abhaengigkeiten. Der Nutzer baut in der
-   interaktiven Zerlegung eigene Tabellen; normalization-engine.js prueft sie
-   auf Verlustfreiheit, Abhaengigkeitserhaltung und erreichte Normalform je
-   Tabelle - nicht nur eine einzige feste "Musterloesung"-Zeichenkette.
+   die dafuer geltenden funktionalen Abhaengigkeiten und eine explizite
+   Aufgabenstellung (task, a/b/c-Teilaufgaben wie in der Klausur). Der Nutzer
+   baut in der interaktiven Zerlegung eigene Tabellen; normalization-engine.js
+   prueft sie auf Verlustfreiheit, Abhaengigkeitserhaltung und erreichte
+   Normalform je Tabelle - nicht nur eine einzige feste "Musterloesung".
    ========================================================================== */
 
 const NORMALIZATION_EXERCISES = [
@@ -14,6 +15,8 @@ const NORMALIZATION_EXERCISES = [
     level: 1,
     title: "Restaurantreservierungen",
     intro: "Eine Reservierungsplattform speichert bisher alles in einer einzigen Tabelle 'RestaurantReservierung'.",
+    task: `<p>a) Überprüfen Sie, ob die Relation der 1., 2. und 3. Normalform genügt. Falls Normalformen verletzt sind, führen Sie die Verletzungen bitte einzeln auf.</p>
+<p>b) Normalisieren Sie die Relation vollständig.</p>`,
     attributes: [
       { key: "PID", label: "PersonenID", type: "INTEGER", description: "eindeutige PersonenID (PK-Komponente)" },
       { key: "RID", label: "RestaurantID", type: "INTEGER", description: "eindeutige RestaurantID (PK-Komponente)" },
@@ -46,10 +49,89 @@ const NORMALIZATION_EXERCISES = [
   },
 
   {
+    id: "bibliothek",
+    level: 1,
+    title: "Bibliotheksausleihe",
+    intro: "Eine Stadtbibliothek speichert bisher alle Ausleihen in einer einzigen Tabelle 'Ausleihe'.",
+    task: `<p>a) Überprüfen Sie, ob die Relation der 1., 2. und 3. Normalform genügt. Falls Normalformen verletzt sind, führen Sie die Verletzungen bitte einzeln auf.</p>
+<p>b) Normalisieren Sie die Relation vollständig.</p>`,
+    attributes: [
+      { key: "ISBN", label: "ISBN", type: "VARCHAR(20)", description: "eindeutige ISBN des Buchs (PK-Komponente)" },
+      { key: "LeserNr", label: "LeserNr", type: "INTEGER", description: "eindeutige Lesernummer (PK-Komponente)" },
+      { key: "Titel", label: "Titel", type: "VARCHAR(50)", description: "Titel des Buchs" },
+      { key: "Autor", label: "Autor", type: "VARCHAR(50)", description: "Autor des Buchs" },
+      { key: "LeserName", label: "LeserName", type: "VARCHAR(50)", description: "Name der Leserin/des Lesers" },
+      { key: "Ausleihdatum", label: "Ausleihdatum", type: "DATE", description: "Datum der Ausleihe" },
+      { key: "Rueckgabedatum", label: "Rueckgabedatum", type: "DATE", description: "Rückgabedatum (NULL falls noch nicht zurückgegeben)" }
+    ],
+    keyAttrs: ["ISBN", "LeserNr"],
+    fds: [
+      { lhs: ["ISBN"], rhs: ["Titel", "Autor"] },
+      { lhs: ["LeserNr"], rhs: ["LeserName"] },
+      { lhs: ["ISBN", "LeserNr"], rhs: ["Ausleihdatum", "Rueckgabedatum"] }
+    ],
+    hint: "Der Primärschlüssel ist {ISBN, LeserNr} (vereinfachend: eine Leserin leiht ein Buch jeweils nur einmal gleichzeitig aus). Titel/Autor hängen nur von ISBN ab, LeserName nur von LeserNr - beides Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Buch, Leser, Ausleihe.",
+    goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
+    requireDependencyPreserving: true,
+    solution: {
+      tables: [
+        { name: "Buch", attrs: ["ISBN", "Titel", "Autor"], pk: ["ISBN"] },
+        { name: "Leser", attrs: ["LeserNr", "LeserName"], pk: ["LeserNr"] },
+        { name: "Ausleihe", attrs: ["ISBN", "LeserNr", "Ausleihdatum", "Rueckgabedatum"], pk: ["ISBN", "LeserNr"] }
+      ],
+      narrative: `<p><strong>Schritt 1 - volle funktionale Abhängigkeiten:</strong> ISBN → Titel, Autor. LeserNr → LeserName. {ISBN,LeserNr} → Ausleihdatum, Rückgabedatum.</p>
+<p><strong>Schritt 2 - Schlüsselkandidat:</strong> Nur {ISBN,LeserNr} bestimmt alle anderen Attribute.</p>
+<p><strong>Schritt 3 - Normalisieren:</strong> Titel/Autor hängen nur vom Teil ISBN ab, LeserName nur vom Teil LeserNr - beides Teilabhängigkeiten (2NF-Verletzung). Also: Buch(ISBN, Titel, Autor), Leser(LeserNr, LeserName) auslagern. Übrig bleibt Ausleihe(ISBN, LeserNr, Ausleihdatum, Rückgabedatum) mit dem vollen Schlüssel. Alle drei Tabellen sind danach in BCNF, verlustfrei und abhängigkeitserhaltend.</p>`
+    }
+  },
+
+  {
+    id: "hotelbuchung",
+    level: 1,
+    title: "Hotelbuchung",
+    intro: "Ein Hotel speichert bisher alle Buchungen in einer einzigen Tabelle 'Buchung'.",
+    task: `<p>a) Überprüfen Sie, ob die Relation der 1., 2. und 3. Normalform genügt. Falls Normalformen verletzt sind, führen Sie die Verletzungen bitte einzeln auf.</p>
+<p>b) Normalisieren Sie die Relation vollständig.</p>`,
+    attributes: [
+      { key: "GastNr", label: "GastNr", type: "INTEGER", description: "eindeutige Gastnummer (PK-Komponente)" },
+      { key: "ZimmerNr", label: "ZimmerNr", type: "INTEGER", description: "eindeutige Zimmernummer (PK-Komponente)" },
+      { key: "GastName", label: "GastName", type: "VARCHAR(50)", description: "Name des Gastes" },
+      { key: "Zimmertyp", label: "Zimmertyp", type: "VARCHAR(20)", description: "Typ des Zimmers (Einzel/Doppel/Suite)" },
+      { key: "Anreise", label: "Anreise", type: "DATE", description: "Anreisedatum" },
+      { key: "Abreise", label: "Abreise", type: "DATE", description: "Abreisedatum" },
+      { key: "Preis", label: "Preis", type: "DECIMAL(7,2)", description: "Gesamtpreis dieser Buchung" }
+    ],
+    keyAttrs: ["GastNr", "ZimmerNr"],
+    fds: [
+      { lhs: ["GastNr"], rhs: ["GastName"] },
+      { lhs: ["ZimmerNr"], rhs: ["Zimmertyp"] },
+      { lhs: ["GastNr", "ZimmerNr"], rhs: ["Anreise", "Abreise", "Preis"] }
+    ],
+    hint: "Der Primärschlüssel ist {GastNr, ZimmerNr} (vereinfachend: ein Gast bucht ein Zimmer jeweils nur einmal gleichzeitig). GastName hängt nur von GastNr ab, Zimmertyp nur von ZimmerNr - beides Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Gast, Zimmer, Buchung.",
+    goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
+    requireDependencyPreserving: true,
+    solution: {
+      tables: [
+        { name: "Gast", attrs: ["GastNr", "GastName"], pk: ["GastNr"] },
+        { name: "Zimmer", attrs: ["ZimmerNr", "Zimmertyp"], pk: ["ZimmerNr"] },
+        { name: "Buchung", attrs: ["GastNr", "ZimmerNr", "Anreise", "Abreise", "Preis"], pk: ["GastNr", "ZimmerNr"] }
+      ],
+      narrative: `<p><strong>Schritt 1 - volle funktionale Abhängigkeiten:</strong> GastNr → GastName. ZimmerNr → Zimmertyp. {GastNr,ZimmerNr} → Anreise, Abreise, Preis.</p>
+<p><strong>Schritt 2 - Schlüsselkandidat:</strong> Nur {GastNr,ZimmerNr} bestimmt alle anderen Attribute.</p>
+<p><strong>Schritt 3 - Normalisieren:</strong> GastName hängt nur vom Teil GastNr ab, Zimmertyp nur vom Teil ZimmerNr - beides Teilabhängigkeiten (2NF-Verletzung). Also: Gast(GastNr, GastName), Zimmer(ZimmerNr, Zimmertyp) auslagern. Übrig bleibt Buchung(GastNr, ZimmerNr, Anreise, Abreise, Preis) mit dem vollen Schlüssel. Alle drei Tabellen sind danach in BCNF, verlustfrei und abhängigkeitserhaltend.</p>`
+    }
+  },
+
+  {
     id: "personalvermittlung",
     level: 2,
     title: "Personalvermittlungsagentur",
     intro: "Eine Personalvermittlungsagentur möchte ihre Projektverwaltung von Excel in eine relationale Datenbank übertragen. Aktuell liegen alle Daten in der 0. Normalform (0NF) in einer einzigen Tabelle 'Daten' vor.",
+    task: `<p>Dokumentieren Sie den Prozess der schrittweisen Überführung obiger 0NF in die 3NF anhand der aus der Vorlesung bekannten Vorgehensweise:</p>
+<p>a) Alle vollen funktionalen Abhängigkeiten identifizieren.</p>
+<p>b) Aus den Schlüsselkandidaten für die Tabelle(n) einen Primary Key auswählen.</p>
+<p>c) Mit den vollen funktionalen Abhängigkeiten die einzelnen Normalisierungsschritte durchführen.</p>
+<p>Nach welchem "Algorithmus" erzeugt dieser Prozess Foreign Keys?</p>`,
     attributes: [
       { key: "V", label: "Vorname", type: "VARCHAR(30)", description: "Vorname der Person" },
       { key: "N", label: "Nachname", type: "VARCHAR(30)", description: "Nachname der Person" },
@@ -86,10 +168,56 @@ const NORMALIZATION_EXERCISES = [
   },
 
   {
+    id: "seminaranmeldung",
+    level: 2,
+    title: "Seminaranmeldung",
+    intro: "Eine Hochschule speichert bisher alle Seminaranmeldungen in einer einzigen Tabelle 'Anmeldung'.",
+    task: `<p>Dokumentieren Sie den Prozess der schrittweisen Überführung dieser Relation in die 3NF anhand der bekannten Vorgehensweise:</p>
+<p>a) Alle vollen funktionalen Abhängigkeiten identifizieren.</p>
+<p>b) Aus den Schlüsselkandidaten einen Primary Key auswählen.</p>
+<p>c) Mit den vollen funktionalen Abhängigkeiten die einzelnen Normalisierungsschritte durchführen.</p>`,
+    attributes: [
+      { key: "MatrikelNr", label: "MatrikelNr", type: "INTEGER", description: "eindeutige Matrikelnummer (PK-Komponente)" },
+      { key: "SeminarNr", label: "SeminarNr", type: "INTEGER", description: "eindeutige Seminarnummer (PK-Komponente)" },
+      { key: "StudentName", label: "StudentName", type: "VARCHAR(50)", description: "Name der Studentin/des Studenten" },
+      { key: "SeminarTitel", label: "SeminarTitel", type: "VARCHAR(50)", description: "Titel des Seminars" },
+      { key: "DozentName", label: "DozentName", type: "VARCHAR(50)", description: "Name der/des unterrichtenden Dozentin/Dozenten" },
+      { key: "DozentBuero", label: "DozentBuero", type: "VARCHAR(20)", description: "Büronummer der/des Dozentin/Dozenten" },
+      { key: "Note", label: "Note", type: "DECIMAL(2,1)", description: "Note in diesem Seminar" }
+    ],
+    keyAttrs: ["MatrikelNr", "SeminarNr"],
+    fds: [
+      { lhs: ["MatrikelNr"], rhs: ["StudentName"] },
+      { lhs: ["SeminarNr"], rhs: ["SeminarTitel", "DozentName"] },
+      { lhs: ["DozentName"], rhs: ["DozentBuero"] },
+      { lhs: ["MatrikelNr", "SeminarNr"], rhs: ["Note"] }
+    ],
+    hint: "Schlüsselkandidat ist {MatrikelNr,SeminarNr}. StudentName hängt nur von MatrikelNr ab, SeminarTitel/DozentName nur von SeminarNr - beides Teilabhängigkeiten (2NF). Aber Vorsicht: DozentBuero hängt nicht direkt von SeminarNr ab, sondern von DozentName - eine zusätzliche transitive Abhängigkeit (3NF), die eine eigene, vierte Tabelle braucht.",
+    goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF. Achtung: hier reichen 3 Tabellen nicht ganz - es braucht 4.",
+    requireDependencyPreserving: true,
+    solution: {
+      tables: [
+        { name: "Student", attrs: ["MatrikelNr", "StudentName"], pk: ["MatrikelNr"] },
+        { name: "Seminar", attrs: ["SeminarNr", "SeminarTitel", "DozentName"], pk: ["SeminarNr"] },
+        { name: "Dozent", attrs: ["DozentName", "DozentBuero"], pk: ["DozentName"] },
+        { name: "Anmeldung", attrs: ["MatrikelNr", "SeminarNr", "Note"], pk: ["MatrikelNr", "SeminarNr"] }
+      ],
+      narrative: `<p><strong>Schritt 1 - volle funktionale Abhängigkeiten:</strong> MatrikelNr → StudentName. SeminarNr → SeminarTitel, DozentName. DozentName → DozentBuero. {MatrikelNr,SeminarNr} → Note.</p>
+<p><strong>Schritt 2 - Schlüsselkandidat:</strong> {MatrikelNr,SeminarNr} ist der einzige Schlüsselkandidat.</p>
+<p><strong>Schritt 3 - 2NF (Teilabhängigkeiten entfernen):</strong> StudentName hängt nur vom Studentenanteil ab, SeminarTitel/DozentName nur von SeminarNr. Auslagern in Student(MatrikelNr,StudentName) und einen vorläufigen "Seminar"-Topf (SeminarNr,SeminarTitel,DozentName,DozentBuero). Übrig bleibt Anmeldung(MatrikelNr,SeminarNr,Note) mit vollem Schlüssel.</p>
+<p><strong>Schritt 4 - 3NF (transitive Abhängigkeiten entfernen):</strong> Im vorläufigen Seminar-Topf gilt SeminarNr → DozentName → DozentBuero - DozentBuero hängt nur transitiv über DozentName von SeminarNr ab, nicht direkt. Das ist eine 3NF-Verletzung: DozentName selbst ist kein Schlüssel dieser Tabelle. Also weiter aufteilen in Seminar(SeminarNr,SeminarTitel,DozentName) und Dozent(DozentName,DozentBuero). Ergebnis: 4 Tabellen, alle in BCNF, verlustfrei und abhängigkeitserhaltend.</p>`
+    }
+  },
+
+  {
     id: "kurswahl",
     level: 3,
     title: "Kurswahl (3NF vs. BCNF)",
     intro: "Eine Hochschule verwaltet, welche Dozentin welchen Kurs für welche Studentin unterrichtet. Regel der Schule: jede Dozentin unterrichtet genau einen Kurs (auch wenn ein Kurs mehrere Dozentinnen/Sektionen haben kann).",
+    task: `<p>a) Bestimmen Sie alle Schlüsselkandidaten der Relation.</p>
+<p>b) Prüfen Sie, ob die Relation in 3NF ist - begründen Sie warum bzw. warum nicht.</p>
+<p>c) Prüfen Sie, ob die Relation in BCNF ist. Falls nicht, normalisieren Sie vollständig nach BCNF.</p>
+<p>d) Ist Ihre Zerlegung abhängigkeitserhaltend? Was bedeutet das Ergebnis für die praktische Anwendung?</p>`,
     attributes: [
       { key: "S", label: "Student", type: "VARCHAR(30)", description: "Name der Studentin/des Studenten" },
       { key: "K", label: "Kurs", type: "VARCHAR(30)", description: "Name des Kurses" },

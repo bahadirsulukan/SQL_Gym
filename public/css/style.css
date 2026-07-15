@@ -862,6 +862,22 @@ body.ref-panel-locked{ overflow: hidden; }
   margin: 10px 0 0;
 }
 
+.norm-task{
+  background: rgba(217,164,65,0.06);
+  border: 1px solid rgba(217,164,65,0.3);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  margin-bottom: 24px;
+}
+.norm-task-body{ margin-top: 8px; }
+.norm-task-body p{
+  font-size: 14.5px;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 0 0 10px;
+}
+.norm-task-body p:last-child{ margin-bottom: 0; }
+
 .norm-editor{
   background: var(--panel);
   border: 1px solid var(--line);
