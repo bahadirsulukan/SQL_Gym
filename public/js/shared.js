@@ -33,6 +33,17 @@ const SqlUeben = (function () {
     return db.exec(sql); // [{columns:[...], values:[[...],...]}] or []
   }
 
+  // Frische, nicht zwischengespeicherte Instanz - fuer Aufgaben, die die DB
+  // mutieren (DDL/DML/Trigger). Jeder Aufruf liefert eine unabhaengige Kopie,
+  // damit Aenderungen aus einem Loesungsversuch nicht in den naechsten durchsickern.
+  function createFreshDbInstance(dbId) {
+    const def = DATABASES.find(d => d.id === dbId);
+    if (!def) throw new Error(`Unbekannte Datenbank: ${dbId}`);
+    const db = new SQL.Database();
+    db.run(def.sql);
+    return db;
+  }
+
   function formatCell(cell) {
     if (cell === null) return `<span class="cell-null">NULL</span>`;
     if (typeof cell === "number" && !Number.isInteger(cell)) return cell.toFixed(2);
@@ -147,6 +158,28 @@ const SqlUeben = (function () {
     return Object.keys(loadNormProgress()).length;
   }
 
+  /* ---------------------------------------------------------- sql-praxis progress */
+  // Wieder ein eigener Key: DDL/DML/Trigger/Concept sind konzeptionell eine dritte,
+  // unabhaengige Aufgabenkategorie neben den 69 SELECT-Aufgaben und der Normalisierung.
+  function loadPraxisProgress() {
+    try { return JSON.parse(localStorage.getItem("sqluebenPraxisProgress") || "{}"); }
+    catch (e) { return {}; }
+  }
+  function savePraxisProgress(p) {
+    localStorage.setItem("sqluebenPraxisProgress", JSON.stringify(p));
+  }
+  function markPraxisSolved(exId) {
+    const p = loadPraxisProgress();
+    p[exId] = true;
+    savePraxisProgress(p);
+  }
+  function isPraxisSolved(exId) {
+    return !!loadPraxisProgress()[exId];
+  }
+  function praxisSolvedCount() {
+    return Object.keys(loadPraxisProgress()).length;
+  }
+
   /* ---------------------------------------------------------------- nav badge */
   function renderNavProgress() {
     const el = document.getElementById("navProgress");
@@ -183,10 +216,11 @@ const SqlUeben = (function () {
   }
 
   return {
-    bootSqlJsEngine, execQuery, formatCell, normalizeRows, formatSql,
+    bootSqlJsEngine, execQuery, createFreshDbInstance, formatCell, normalizeRows, formatSql,
     rowsMatchExact, rowsMatchAsSet,
     loadProgress, saveProgress, markSolved, isSolved, solvedCount, totalCount, totalSolved,
     resetProgress, renderNavProgress, wireBackToTop,
-    markNormSolved, isNormSolved, normSolvedCount
+    markNormSolved, isNormSolved, normSolvedCount,
+    markPraxisSolved, isPraxisSolved, praxisSolvedCount
   };
 })();
