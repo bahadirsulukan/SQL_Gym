@@ -1052,6 +1052,9 @@ body.ref-panel-locked{ overflow: hidden; }
 .ex-diff.cat-trigger{ color: var(--coral); border-color: rgba(224,101,79,0.35); }
 .ex-diff.cat-concept{ color: var(--text-dim); border-color: var(--line); }
 
+.praxis-schema{ margin-bottom: 24px; }
+.praxis-schema .schema-grid{ margin-top: 10px; }
+
 .concept-quiz{
   background: var(--panel);
   border: 1px solid var(--line);

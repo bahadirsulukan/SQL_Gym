@@ -23,6 +23,9 @@
     exPrev: document.getElementById("exPrev"),
     exNext: document.getElementById("exNext"),
     praxisProgress: document.getElementById("praxisProgress"),
+    praxisSchema: document.getElementById("praxisSchema"),
+    praxisSchemaLabel: document.getElementById("praxisSchemaLabel"),
+    praxisSchemaGrid: document.getElementById("praxisSchemaGrid"),
     sqlBlock: document.getElementById("praxisSqlBlock"),
     conceptBlock: document.getElementById("praxisConceptBlock"),
     sqlEditorMount: document.getElementById("sqlEditor"),
@@ -42,6 +45,30 @@
   /* ------------------------------------------------------------ progress */
   function renderProgressBadge() {
     els.praxisProgress.textContent = `${SqlUeben.praxisSolvedCount()} / ${SQL_PRAXIS_EXERCISES.length} gelöst`;
+  }
+
+  /* ------------------------------------------------------------ schema */
+  function renderSchema(ex) {
+    if (ex.category === "concept") {
+      els.praxisSchema.hidden = true;
+      return;
+    }
+    const def = DATABASES.find(d => d.id === ex.dbId);
+    els.praxisSchemaLabel.textContent = `Schema: ${def.name}`;
+    els.praxisSchemaGrid.innerHTML = Object.entries(def.schema).map(([table, cols]) => `
+      <div class="schema-table">
+        <h4>${table}</h4>
+        <ul>
+          ${cols.map(([name, type, key]) => `
+            <li class="${(key || '').includes('pk') ? 'pk' : ''}">
+              <span>${name}${key ? ` <span class="fk-mark">${key}</span>` : ""}</span>
+              <span class="col-type">${type}</span>
+            </li>
+          `).join("")}
+        </ul>
+      </div>
+    `).join("");
+    els.praxisSchema.hidden = false;
   }
 
   /* ------------------------------------------------------------ exercise nav */
@@ -67,6 +94,7 @@
     els.exNext.disabled = state.currentIndex === SQL_PRAXIS_EXERCISES.length - 1;
 
     state.quizAnswered = false;
+    renderSchema(ex);
 
     if (ex.category === "concept") {
       els.sqlBlock.hidden = true;
