@@ -1093,3 +1093,14 @@ body.ref-panel-locked{ overflow: hidden; }
 .quiz-feedback.ok{ background: rgba(79,191,156,0.12); color: var(--teal); border: 1px solid rgba(79,191,156,0.3); }
 .quiz-feedback.err{ background: rgba(224,101,79,0.12); color: #f2a494; border: 1px solid rgba(224,101,79,0.3); }
 .quiz-feedback p{ margin: 0; }
+
+/* ============================================================
+   HOMEPAGE FEATURE SECTIONS (Normalisierung / SQL-Praxis)
+   ============================================================ */
+.feature-section-alt{
+  background: var(--panel);
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+}
+.feature-tags{ display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 28px; }
+.feature-cta{ margin-top: 4px; }
