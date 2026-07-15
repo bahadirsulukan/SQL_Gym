@@ -485,6 +485,7 @@ section{ padding: 72px 0; }
   gap: 20px;
   align-items: start;
 }
+.console-grid[hidden]{ display: none; }
 @media (max-width: 880px){ .console-grid{ grid-template-columns: 1fr; } }
 
 .editor-pane, .result-pane{
