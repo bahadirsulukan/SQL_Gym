@@ -123,6 +123,74 @@ const NORMALIZATION_EXERCISES = [
   },
 
   {
+    id: "autoverleih",
+    level: 1,
+    title: "Autoverleih",
+    intro: "Ein Autoverleih speichert bisher alle Vermietungen in einer einzigen Tabelle 'Miete'.",
+    task: `<p>a) Überprüfen Sie, ob die Relation der 1., 2. und 3. Normalform genügt. Falls Normalformen verletzt sind, führen Sie die Verletzungen bitte einzeln auf.</p>
+<p>b) Normalisieren Sie die Relation vollständig.</p>`,
+    attributes: [
+      { key: "KundenNr", label: "KundenNr", type: "INTEGER", description: "eindeutige Kundennummer (PK-Komponente)" },
+      { key: "FahrzeugNr", label: "FahrzeugNr", type: "INTEGER", description: "eindeutige Fahrzeugnummer (PK-Komponente)" },
+      { key: "KundenName", label: "KundenName", type: "VARCHAR(50)", description: "Name des Kunden" },
+      { key: "Fahrzeugmodell", label: "Fahrzeugmodell", type: "VARCHAR(30)", description: "Modell des Fahrzeugs" },
+      { key: "Mietbeginn", label: "Mietbeginn", type: "DATE", description: "Beginn der Miete" },
+      { key: "Mietende", label: "Mietende", type: "DATE", description: "Ende der Miete" },
+      { key: "Gesamtpreis", label: "Gesamtpreis", type: "DECIMAL(7,2)", description: "Gesamtpreis dieser Miete" }
+    ],
+    keyAttrs: ["KundenNr", "FahrzeugNr"],
+    fds: [
+      { lhs: ["KundenNr"], rhs: ["KundenName"] },
+      { lhs: ["FahrzeugNr"], rhs: ["Fahrzeugmodell"] },
+      { lhs: ["KundenNr", "FahrzeugNr"], rhs: ["Mietbeginn", "Mietende", "Gesamtpreis"] }
+    ],
+    hint: "Der Primärschlüssel ist {KundenNr, FahrzeugNr} (vereinfachend: ein Kunde mietet ein Fahrzeug jeweils nur einmal gleichzeitig). KundenName hängt nur von KundenNr ab, Fahrzeugmodell nur von FahrzeugNr - beides Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Kunde, Fahrzeug, Miete.",
+    goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
+    requireDependencyPreserving: true,
+    solution: {
+      tables: [
+        { name: "Kunde", attrs: ["KundenNr", "KundenName"], pk: ["KundenNr"] },
+        { name: "Fahrzeug", attrs: ["FahrzeugNr", "Fahrzeugmodell"], pk: ["FahrzeugNr"] },
+        { name: "Miete", attrs: ["KundenNr", "FahrzeugNr", "Mietbeginn", "Mietende", "Gesamtpreis"], pk: ["KundenNr", "FahrzeugNr"] }
+      ],
+      narrative: `<p><strong>Schritt 1 - volle funktionale Abhängigkeiten:</strong> KundenNr → KundenName. FahrzeugNr → Fahrzeugmodell. {KundenNr,FahrzeugNr} → Mietbeginn, Mietende, Gesamtpreis.</p>
+<p><strong>Schritt 2 - Schlüsselkandidat:</strong> Nur {KundenNr,FahrzeugNr} bestimmt alle anderen Attribute.</p>
+<p><strong>Schritt 3 - Normalisieren:</strong> KundenName hängt nur vom Teil KundenNr ab, Fahrzeugmodell nur vom Teil FahrzeugNr - beides Teilabhängigkeiten (2NF-Verletzung). Also: Kunde(KundenNr, KundenName), Fahrzeug(FahrzeugNr, Fahrzeugmodell) auslagern. Übrig bleibt Miete(KundenNr, FahrzeugNr, Mietbeginn, Mietende, Gesamtpreis) mit dem vollen Schlüssel. Alle drei Tabellen sind danach in BCNF, verlustfrei und abhängigkeitserhaltend.</p>`
+    }
+  },
+
+  {
+    id: "mitarbeiterausweis",
+    level: 1,
+    title: "Mitarbeiterausweis",
+    intro: "Die Personalabteilung speichert Stammdaten bisher in einer einzigen Tabelle 'Mitarbeiter'.",
+    task: `<p>a) Bestimmen Sie den/die Schlüsselkandidaten der Relation.</p>
+<p>b) Überprüfen Sie, ob die Relation der 2. und 3. Normalform genügt. Begründen Sie Ihre Antwort.</p>
+<p>c) Ist die Relation in BCNF? Falls nicht, normalisieren Sie vollständig.</p>`,
+    attributes: [
+      { key: "MitarbeiterNr", label: "MitarbeiterNr", type: "INTEGER", description: "eindeutige Mitarbeiternummer (Primärschlüssel)" },
+      { key: "Name", label: "Name", type: "VARCHAR(50)", description: "Name des Mitarbeiters" },
+      { key: "Abteilung", label: "Abteilung", type: "VARCHAR(30)", description: "Abteilung des Mitarbeiters" },
+      { key: "Ausweisnummer", label: "Ausweisnummer", type: "VARCHAR(20)", description: "Nummer des Firmenausweises" }
+    ],
+    keyAttrs: ["MitarbeiterNr"],
+    fds: [
+      { lhs: ["MitarbeiterNr"], rhs: ["Name", "Abteilung", "Ausweisnummer"] }
+    ],
+    hint: "Es gibt nur einen einzigen Schlüsselkandidaten: {MitarbeiterNr}. Ein einzelnes Attribut als Schlüssel kann per Definition keine Teilabhängigkeit (2NF-Verletzung) erzeugen, da es keine 'echte Teilmenge' des Schlüssels gibt. Prüfe, ob zwischen den Nicht-Schlüssel-Attributen selbst eine Abhängigkeit besteht (transitive Abhängigkeit) - falls nicht, ist die Tabelle schon fertig normalisiert.",
+    goal: "Ziel dieser Aufgabe: nicht jede 0NF-Tabelle muss zerlegt werden. Prüfe bewusst nach, bevor du Tabellen anlegst - manchmal ist eine Relation schon in BCNF.",
+    requireDependencyPreserving: true,
+    solution: {
+      tables: [
+        { name: "Mitarbeiter", attrs: ["MitarbeiterNr", "Name", "Abteilung", "Ausweisnummer"], pk: ["MitarbeiterNr"] }
+      ],
+      narrative: `<p><strong>Schlüsselkandidat:</strong> {MitarbeiterNr} ist der einzige Schlüsselkandidat - er bestimmt alle anderen Attribute direkt.</p>
+<p><strong>2NF:</strong> Eine Teilabhängigkeit setzt voraus, dass ein Attribut nur von einem <em>echten Teil</em> des Schlüssels abhängt. Da der Schlüssel hier nur aus einem einzigen Attribut besteht, gibt es keinen "echten Teil" - 2NF ist damit automatisch erfüllt.</p>
+<p><strong>3NF/BCNF:</strong> Es gibt keine Abhängigkeit zwischen den Nicht-Schlüssel-Attributen (Name, Abteilung, Ausweisnummer hängen nur von MitarbeiterNr ab, nicht voneinander) - also auch keine transitive Abhängigkeit. Die Relation ist damit bereits in BCNF, eine Zerlegung ist nicht nötig und würde hier auch keinen Vorteil bringen.</p>`
+    }
+  },
+
+  {
     id: "personalvermittlung",
     level: 2,
     title: "Personalvermittlungsagentur",
@@ -206,6 +274,44 @@ const NORMALIZATION_EXERCISES = [
 <p><strong>Schritt 2 - Schlüsselkandidat:</strong> {MatrikelNr,SeminarNr} ist der einzige Schlüsselkandidat.</p>
 <p><strong>Schritt 3 - 2NF (Teilabhängigkeiten entfernen):</strong> StudentName hängt nur vom Studentenanteil ab, SeminarTitel/DozentName nur von SeminarNr. Auslagern in Student(MatrikelNr,StudentName) und einen vorläufigen "Seminar"-Topf (SeminarNr,SeminarTitel,DozentName,DozentBuero). Übrig bleibt Anmeldung(MatrikelNr,SeminarNr,Note) mit vollem Schlüssel.</p>
 <p><strong>Schritt 4 - 3NF (transitive Abhängigkeiten entfernen):</strong> Im vorläufigen Seminar-Topf gilt SeminarNr → DozentName → DozentBuero - DozentBuero hängt nur transitiv über DozentName von SeminarNr ab, nicht direkt. Das ist eine 3NF-Verletzung: DozentName selbst ist kein Schlüssel dieser Tabelle. Also weiter aufteilen in Seminar(SeminarNr,SeminarTitel,DozentName) und Dozent(DozentName,DozentBuero). Ergebnis: 4 Tabellen, alle in BCNF, verlustfrei und abhängigkeitserhaltend.</p>`
+    }
+  },
+
+  {
+    id: "projektstunden",
+    level: 2,
+    title: "Projektstunden",
+    intro: "Eine Firma erfasst bisher alle geleisteten Projektstunden in einer einzigen Tabelle 'Erfassung' - pro Mitarbeiter, Projekt und Jahr ein Datensatz.",
+    task: `<p>Dokumentieren Sie den Prozess der schrittweisen Überführung dieser Relation in die 3NF anhand der bekannten Vorgehensweise:</p>
+<p>a) Alle vollen funktionalen Abhängigkeiten identifizieren.</p>
+<p>b) Aus den Schlüsselkandidaten einen Primary Key auswählen.</p>
+<p>c) Mit den vollen funktionalen Abhängigkeiten die einzelnen Normalisierungsschritte durchführen.</p>`,
+    attributes: [
+      { key: "MitarbeiterNr", label: "MitarbeiterNr", type: "INTEGER", description: "eindeutige Mitarbeiternummer (PK-Komponente)" },
+      { key: "ProjektNr", label: "ProjektNr", type: "INTEGER", description: "eindeutige Projektnummer (PK-Komponente)" },
+      { key: "Jahr", label: "Jahr", type: "INTEGER", description: "Erfassungsjahr (PK-Komponente)" },
+      { key: "MitarbeiterName", label: "MitarbeiterName", type: "VARCHAR(50)", description: "Name des Mitarbeiters" },
+      { key: "Projektname", label: "Projektname", type: "VARCHAR(50)", description: "Name des Projekts" },
+      { key: "Stunden", label: "Stunden", type: "INTEGER", description: "geleistete Stunden in diesem Jahr auf diesem Projekt" }
+    ],
+    keyAttrs: ["MitarbeiterNr", "ProjektNr", "Jahr"],
+    fds: [
+      { lhs: ["MitarbeiterNr"], rhs: ["MitarbeiterName"] },
+      { lhs: ["ProjektNr"], rhs: ["Projektname"] },
+      { lhs: ["MitarbeiterNr", "ProjektNr", "Jahr"], rhs: ["Stunden"] }
+    ],
+    hint: "Der Primärschlüssel besteht hier aus drei Teilen: {MitarbeiterNr, ProjektNr, Jahr}. MitarbeiterName hängt nur vom Teil MitarbeiterNr ab, Projektname nur vom Teil ProjektNr - beides Teilabhängigkeiten (2NF-Verletzung), obwohl der Schlüssel diesmal drei statt zwei Komponenten hat. Bilde drei Tabellen: Mitarbeiter, Projekt, Erfassung.",
+    goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
+    requireDependencyPreserving: true,
+    solution: {
+      tables: [
+        { name: "Mitarbeiter", attrs: ["MitarbeiterNr", "MitarbeiterName"], pk: ["MitarbeiterNr"] },
+        { name: "Projekt", attrs: ["ProjektNr", "Projektname"], pk: ["ProjektNr"] },
+        { name: "Erfassung", attrs: ["MitarbeiterNr", "ProjektNr", "Jahr", "Stunden"], pk: ["MitarbeiterNr", "ProjektNr", "Jahr"] }
+      ],
+      narrative: `<p><strong>Schritt 1 - volle funktionale Abhängigkeiten:</strong> MitarbeiterNr → MitarbeiterName. ProjektNr → Projektname. {MitarbeiterNr,ProjektNr,Jahr} → Stunden.</p>
+<p><strong>Schritt 2 - Schlüsselkandidat:</strong> Nur {MitarbeiterNr,ProjektNr,Jahr} bestimmt alle anderen Attribute - hier hat der Schlüssel also drei statt nur zwei Komponenten.</p>
+<p><strong>Schritt 3 - Normalisieren:</strong> MitarbeiterName hängt nur vom Teil MitarbeiterNr ab, Projektname nur vom Teil ProjektNr - beides Teilabhängigkeiten (2NF-Verletzung), da beides jeweils nur ein Teil des dreiteiligen Schlüssels ist. Also: Mitarbeiter(MitarbeiterNr, MitarbeiterName), Projekt(ProjektNr, Projektname) auslagern. Übrig bleibt Erfassung(MitarbeiterNr, ProjektNr, Jahr, Stunden) mit dem vollen Schlüssel. Alle drei Tabellen sind danach in BCNF, verlustfrei und abhängigkeitserhaltend.</p>`
     }
   },
 
