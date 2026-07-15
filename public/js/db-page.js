@@ -160,7 +160,7 @@
 
   function openRefPanel() {
     if (!refPanelRendered) {
-      els.refPanelBody.innerHTML = ReferenceView.renderNav() + ReferenceView.renderSections();
+      els.refPanelBody.innerHTML = ReferenceView.renderNav(REFERENCE_SQL) + ReferenceView.renderSections(REFERENCE_SQL);
       SqlUeben.wireBackToTop(document.getElementById("refBackToTop"), els.refPanelOverlay.querySelector(".ref-panel"));
       refPanelRendered = true;
     }

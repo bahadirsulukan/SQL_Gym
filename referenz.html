@@ -53,7 +53,12 @@
   <div class="section-inner">
     <p class="eyebrow">Nachschlagen statt auswendig lernen</p>
     <h1 class="page-title">Kurzreferenz</h1>
-    <p class="section-sub">Das Cheat-Sheet für nebenbei: kurz reinschauen während du eine Aufgabe löst, statt lange zu suchen. Die häufigsten Muster, Fallen und Bausteine, alles auf einer Seite. Auf den Datenbankseiten öffnet sich diese Referenz auch als Panel, ohne dass deine Abfrage verloren geht.</p>
+    <p class="section-sub">Das Cheat-Sheet für nebenbei: kurz reinschauen während du eine Aufgabe löst, statt lange zu suchen. Die häufigsten Muster, Fallen und Bausteine, alles auf einer Seite. Auf den jeweiligen Aufgabenseiten öffnet sich die passende Referenz auch als Panel, ohne dass dein Fortschritt verloren geht.</p>
+    <div class="ref-tabs" id="refTabs">
+      <button class="ref-tab is-active" data-ref="sql">SQL</button>
+      <button class="ref-tab" data-ref="praxis">SQL-Praxis</button>
+      <button class="ref-tab" data-ref="norm">Normalisierung</button>
+    </div>
     <div id="refNavMount"></div>
   </div>
 </section>
@@ -80,8 +85,32 @@
 <script>
 document.addEventListener("DOMContentLoaded", () => {
   SqlUeben.renderNavProgress();
-  document.getElementById("refNavMount").innerHTML = ReferenceView.renderNav();
-  document.getElementById("refSectionsMount").innerHTML = ReferenceView.renderSections();
+
+  const datasets = { sql: REFERENCE_SQL, praxis: REFERENCE_SQL_PRAXIS, norm: REFERENCE_NORMALISIERUNG };
+
+  function renderTab(key) {
+    document.getElementById("refNavMount").innerHTML = ReferenceView.renderNav(datasets[key]);
+    document.getElementById("refSectionsMount").innerHTML = ReferenceView.renderSections(datasets[key]);
+  }
+
+  const tabs = document.querySelectorAll(".ref-tab");
+  tabs.forEach(btn => {
+    btn.addEventListener("click", () => {
+      tabs.forEach(b => b.classList.remove("is-active"));
+      btn.classList.add("is-active");
+      renderTab(btn.dataset.ref);
+      window.scrollTo({ top: document.getElementById("refNavMount").offsetTop - 100, behavior: "smooth" });
+    });
+  });
+
+  const initialTab = new URLSearchParams(window.location.search).get("ref");
+  if (initialTab && datasets[initialTab]) {
+    tabs.forEach(b => b.classList.toggle("is-active", b.dataset.ref === initialTab));
+    renderTab(initialTab);
+  } else {
+    renderTab("sql");
+  }
+
   SqlUeben.wireBackToTop(document.getElementById("backToTop"));
 });
 </script>

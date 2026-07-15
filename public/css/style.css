@@ -577,6 +577,21 @@ table.result-table tr:hover td{ background: rgba(255,255,255,0.02); color: var(-
 /* ============================================================
    REFERENCE
    ============================================================ */
+.ref-tabs{ display: flex; gap: 8px; margin-top: 28px; flex-wrap: wrap; }
+.ref-tab{
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--text-dim);
+  background: transparent;
+  border: 1px solid var(--line);
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: border-color .15s, color .15s, background .15s;
+}
+.ref-tab:hover{ border-color: var(--gold); color: var(--gold-soft); }
+.ref-tab.is-active{ background: var(--gold); border-color: var(--gold); color: var(--ink); font-weight: 600; }
+
 .ref-nav{
   display: flex;
   flex-wrap: wrap;

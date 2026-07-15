@@ -15,10 +15,10 @@ const ReferenceView = (function () {
       .replace(/>/g, "&gt;");
   }
 
-  function renderNav() {
+  function renderNav(data) {
     return `
       <nav class="ref-nav" aria-label="Sprungmarken">
-        ${REFERENCE.map(cat => `<a href="#${cat.id}">${cat.title.replace(/&amp;/g, "&")}</a>`).join("")}
+        ${data.map(cat => `<a href="#${cat.id}">${cat.title.replace(/&amp;/g, "&")}</a>`).join("")}
       </nav>
     `;
   }
@@ -41,8 +41,8 @@ const ReferenceView = (function () {
     `;
   }
 
-  function renderSections() {
-    return REFERENCE.map(cat => `
+  function renderSections(data) {
+    return data.map(cat => `
       <div class="ref-category" id="${cat.id}">
         <h2 class="ref-cat-title"><span class="section-num">${cat.num}</span> ${cat.title}</h2>
         <div class="ref-grid">

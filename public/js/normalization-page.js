@@ -36,7 +36,11 @@
     checkBtn: document.getElementById("checkBtn"),
     resetEditorBtn: document.getElementById("resetEditorBtn"),
     normFeedback: document.getElementById("normFeedback"),
-    normSolutionReveal: document.getElementById("normSolutionReveal")
+    normSolutionReveal: document.getElementById("normSolutionReveal"),
+    refNavLink: document.getElementById("refNavLink"),
+    refPanelOverlay: document.getElementById("refPanelOverlay"),
+    refPanelClose: document.getElementById("refPanelClose"),
+    refPanelBody: document.getElementById("refPanelBody")
   };
 
   function currentExercise() {
@@ -350,6 +354,24 @@
     els.normSolutionReveal.hidden = false;
   }
 
+  /* ------------------------------------------------------------ reference panel */
+  let refPanelRendered = false;
+
+  function openRefPanel() {
+    if (!refPanelRendered) {
+      els.refPanelBody.innerHTML = ReferenceView.renderNav(REFERENCE_NORMALISIERUNG) + ReferenceView.renderSections(REFERENCE_NORMALISIERUNG);
+      SqlUeben.wireBackToTop(document.getElementById("refBackToTop"), els.refPanelOverlay.querySelector(".ref-panel"));
+      refPanelRendered = true;
+    }
+    els.refPanelOverlay.classList.add("open");
+    document.body.classList.add("ref-panel-locked");
+  }
+
+  function closeRefPanel() {
+    els.refPanelOverlay.classList.remove("open");
+    document.body.classList.remove("ref-panel-locked");
+  }
+
   function wireStaticEvents() {
     els.exHintBtn.addEventListener("click", () => { els.exHint.hidden = !els.exHint.hidden; });
     els.exSolutionBtn.addEventListener("click", showSolution);
@@ -362,6 +384,19 @@
     els.addTableBtn.addEventListener("click", addTable);
     els.checkBtn.addEventListener("click", runCheck);
     els.resetEditorBtn.addEventListener("click", () => { resetEditorState(); renderEditor(); });
+
+    els.refNavLink.addEventListener("click", e => {
+      if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
+      e.preventDefault();
+      openRefPanel();
+    });
+    els.refPanelClose.addEventListener("click", closeRefPanel);
+    els.refPanelOverlay.addEventListener("click", e => {
+      if (e.target === els.refPanelOverlay) closeRefPanel();
+    });
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape" && els.refPanelOverlay.classList.contains("open")) closeRefPanel();
+    });
   }
 
   function boot() {

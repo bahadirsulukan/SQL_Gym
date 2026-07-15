@@ -43,7 +43,7 @@
       <a href="/datenbanken.html">Datenbanken</a>
       <a href="/sql-praxis.html">SQL-Praxis</a>
       <a href="/normalisierung.html" class="active-link">Normalisierung</a>
-      <a href="/referenz.html">Referenz</a>
+      <a href="/referenz.html" id="refNavLink">Referenz</a>
       <span class="nav-progress" id="navProgress" title="Gelöste SQL-Aufgaben">0 / 0 gelöst</span>
     </nav>
   </div>
@@ -117,9 +117,23 @@
   </div>
 </footer>
 
+<div class="ref-panel-overlay" id="refPanelOverlay">
+  <div class="ref-panel" role="dialog" aria-modal="true" aria-label="Kurzreferenz">
+    <div class="ref-panel-header">
+      <h2>Kurzreferenz</h2>
+      <span class="ref-panel-hint">Esc oder Klick daneben zum Schließen</span>
+      <button class="ref-panel-close" id="refPanelClose" aria-label="Schließen">&times;</button>
+    </div>
+    <div class="ref-panel-body" id="refPanelBody"></div>
+    <button class="back-to-top" id="refBackToTop" aria-label="Nach oben scrollen">&uarr;</button>
+  </div>
+</div>
+
 <script src="/js/databases.js"></script>
 <script src="/js/exercises.js"></script>
 <script src="/js/shared.js"></script>
+<script src="/js/reference-data.js"></script>
+<script src="/js/reference-view.js"></script>
 <script src="/js/normalization-engine.js"></script>
 <script src="/js/normalization-data.js"></script>
 <script src="/js/normalization-page.js"></script>
