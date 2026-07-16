@@ -185,8 +185,25 @@ const NormEngine = (function () {
     });
   }
 
+  // Ist fd durch fds herleitbar? (Y ⊆ X+ unter fds)
+  function fdImpliedBy(fd, fds) {
+    if (fd.lhs.length === 0 || fd.rhs.length === 0) return false;
+    const cl = closure(fd.lhs, fds);
+    return fd.rhs.every(a => cl.has(a));
+  }
+
+  // Zwei FD-Mengen sind aequivalent, wenn jede die andere vollstaendig herleiten
+  // kann (F1 |= F2 und F2 |= F1) - so bleibt eine andere, aber gleichwertige
+  // Gruppierung/Aufteilung der Abhaengigkeiten trotzdem "richtig".
+  function analyzeFdGuess(userFds, trueFds) {
+    const missing = trueFds.filter(fd => !fdImpliedBy(fd, userFds));
+    const wrong = userFds.filter(fd => !fdImpliedBy(fd, trueFds));
+    return { correct: missing.length === 0 && wrong.length === 0, missingCount: missing.length, wrong };
+  }
+
   return {
     closure, candidateKeys, primeAttributes, analyzeNormalForm,
-    isLosslessJoin, isDependencyPreserving, minimalDeterminants
+    isLosslessJoin, isDependencyPreserving, minimalDeterminants,
+    fdImpliedBy, analyzeFdGuess
   };
 })();

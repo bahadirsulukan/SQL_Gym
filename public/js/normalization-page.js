@@ -1,11 +1,16 @@
 /* ==========================================================================
    NORMALIZATION PAGE
-   Given relation is shown as an exam-style schema box (column, type,
-   description, PK marked) - click an attribute in the pool, then click a
-   table to add it there (an attribute can belong to multiple tables at
-   once, since foreign/shared keys have to be duplicated to link fragments
-   back together). "Prüfen" runs the engine (normalization-engine.js)
-   against the exercise's given FDs (normalization-data.js).
+   Two phases per exercise:
+     1. Funktionale Abhaengigkeiten bestimmen - the user builds their own FD
+        guesses (click an attribute: 1st click -> LHS, 2nd -> RHS, 3rd ->
+        cleared), checked via NormEngine.analyzeFdGuess against the exercise's
+        real FDs. Equivalence, not exact string match - a differently grouped
+        but logically equivalent FD set still passes (see the engine).
+     2. Zerlegung - the existing schema-box decomposition editor, unlocked
+        once phase 1 passes. Click an attribute in the pool, then click a
+        table to add it there (an attribute can belong to multiple tables at
+        once, since foreign/shared keys have to be duplicated). "Pruefen"
+        runs the engine against the exercise's real FDs.
    ========================================================================== */
 
 (function () {
@@ -13,7 +18,12 @@
 
   const state = {
     currentIndex: 0,
-    tables: [],       // [{id, name, attrs: Set<string>, pk: Set<string>}]
+    // phase 1: FD discovery
+    userFds: [],          // [{lhs:[...], rhs:[...]}]
+    fdAttrState: {},      // key -> "lhs" | "rhs" (state of the FD currently being built)
+    fdsConfirmed: false,
+    // phase 2: decomposition
+    tables: [],            // [{id, name, attrs: Set<string>, pk: Set<string>}]
     selectedAttr: null,
     nextTableNum: 1
   };
@@ -30,6 +40,16 @@
     normProgress: document.getElementById("normProgress"),
     normSource: document.getElementById("normSource"),
     normTaskBody: document.getElementById("normTaskBody"),
+    fdPhase: document.getElementById("fdPhase"),
+    fdPool: document.getElementById("fdPool"),
+    fdLhsPreview: document.getElementById("fdLhsPreview"),
+    fdRhsPreview: document.getElementById("fdRhsPreview"),
+    fdAddBtn: document.getElementById("fdAddBtn"),
+    fdList: document.getElementById("fdList"),
+    fdCheckBtn: document.getElementById("fdCheckBtn"),
+    fdResetBtn: document.getElementById("fdResetBtn"),
+    fdFeedback: document.getElementById("fdFeedback"),
+    decomposePhase: document.getElementById("decomposePhase"),
     normPool: document.getElementById("normPool"),
     normTables: document.getElementById("normTables"),
     addTableBtn: document.getElementById("addTableBtn"),
@@ -47,12 +67,19 @@
     return NORMALIZATION_EXERCISES[state.currentIndex];
   }
 
+  function currentPhase() {
+    return state.fdsConfirmed ? "decompose" : "fds";
+  }
+
   function attr(key) {
     return currentExercise().attributes.find(x => x.key === key);
   }
   function attrLabel(key) {
     const a = attr(key);
     return a ? a.label : key;
+  }
+  function fdText(fd) {
+    return `${fd.lhs.map(attrLabel).join(", ")} &rarr; ${fd.rhs.map(attrLabel).join(", ")}`;
   }
 
   /* ------------------------------------------------------------ progress */
@@ -61,7 +88,17 @@
     els.normProgress.textContent = `${SqlUeben.normSolvedCount()} / ${NORMALIZATION_EXERCISES.length} gelöst`;
   }
 
-  /* ------------------------------------------------------------ editor state */
+  /* ------------------------------------------------------------ full reset (exercise change) */
+  function resetAllState() {
+    state.userFds = [];
+    state.fdAttrState = {};
+    state.fdsConfirmed = false;
+    els.fdFeedback.hidden = true;
+    els.fdFeedback.innerHTML = "";
+    els.decomposePhase.hidden = true;
+    resetEditorState();
+  }
+
   function resetEditorState() {
     state.tables = [];
     state.selectedAttr = null;
@@ -83,9 +120,6 @@
   /* ------------------------------------------------------------ rendering: given relation */
   function renderSource() {
     const ex = currentExercise();
-    const fdText = ex.fds
-      .map(fd => `${fd.lhs.map(attrLabel).join(", ")} &rarr; ${fd.rhs.map(attrLabel).join(", ")}`)
-      .join("<br>");
     const rows = ex.attributes.map(a => `
       <div class="schema-row${ex.keyAttrs.includes(a.key) ? " is-pk" : ""}">
         <span class="schema-row-name">${a.label}</span>
@@ -102,14 +136,118 @@
         </div>
         ${rows}
       </div>
-      <div class="norm-fds">
-        <span class="editor-label">Gegebene funktionale Abhängigkeiten</span>
-        <p class="norm-fd-list">${fdText}</p>
-      </div>
     `;
   }
 
-  /* ------------------------------------------------------------ rendering: pool + editor tables */
+  /* ------------------------------------------------------------ phase 1: FD builder */
+  function fdPoolAttrHtml(key) {
+    const a = attr(key);
+    const side = state.fdAttrState[key];
+    const cls = side ? ` is-${side}` : "";
+    const badge = side ? `<span class="fd-side-badge">${side === "lhs" ? "L" : "R"}</span>` : "";
+    return `<button class="pool-attr${cls}" data-fd-attr="${key}">${a.label}${badge}</button>`;
+  }
+
+  function renderFdPool() {
+    const ex = currentExercise();
+    els.fdPool.innerHTML = ex.attributes.map(a => fdPoolAttrHtml(a.key)).join("");
+
+    els.fdPool.querySelectorAll(".pool-attr").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const key = btn.dataset.fdAttr;
+        const cur = state.fdAttrState[key];
+        if (!cur) state.fdAttrState[key] = "lhs";
+        else if (cur === "lhs") state.fdAttrState[key] = "rhs";
+        else delete state.fdAttrState[key];
+        renderFdPool();
+        renderFdPreview();
+      });
+    });
+  }
+
+  function renderFdPreview() {
+    const lhsKeys = Object.keys(state.fdAttrState).filter(k => state.fdAttrState[k] === "lhs");
+    const rhsKeys = Object.keys(state.fdAttrState).filter(k => state.fdAttrState[k] === "rhs");
+    els.fdLhsPreview.innerHTML = lhsKeys.length
+      ? lhsKeys.map(attrLabel).join(", ")
+      : '<span class="fd-side-empty">-</span>';
+    els.fdRhsPreview.innerHTML = rhsKeys.length
+      ? rhsKeys.map(attrLabel).join(", ")
+      : '<span class="fd-side-empty">-</span>';
+    els.fdAddBtn.disabled = lhsKeys.length === 0 || rhsKeys.length === 0;
+  }
+
+  function renderFdList() {
+    els.fdList.innerHTML = state.userFds.map((fd, i) => `
+      <div class="fd-list-item">
+        <span>${fdText(fd)}</span>
+        <button class="schema-row-remove" data-remove-fd="${i}" title="Entfernen">&times;</button>
+      </div>
+    `).join("");
+
+    els.fdList.querySelectorAll("[data-remove-fd]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        state.userFds.splice(Number(btn.dataset.removeFd), 1);
+        renderFdList();
+      });
+    });
+  }
+
+  function addFd() {
+    const lhs = Object.keys(state.fdAttrState).filter(k => state.fdAttrState[k] === "lhs");
+    const rhs = Object.keys(state.fdAttrState).filter(k => state.fdAttrState[k] === "rhs");
+    if (lhs.length === 0 || rhs.length === 0) return;
+    state.userFds.push({ lhs, rhs });
+    state.fdAttrState = {};
+    renderFdPool();
+    renderFdPreview();
+    renderFdList();
+  }
+
+  function runFdCheck() {
+    const ex = currentExercise();
+    if (state.userFds.length === 0) {
+      showFdFeedback(`<p class="check-banner err">Noch keine Abhängigkeit hinzugefügt.</p>`);
+      return;
+    }
+    const result = NormEngine.analyzeFdGuess(state.userFds, ex.fds);
+    let html = "";
+    if (result.wrong.length > 0) {
+      html += `<p class="check-banner err">Diese Abhängigkeiten lassen sich aus den echten Zusammenhängen nicht herleiten:</p>
+        <ul class="norm-violations">${result.wrong.map(fd => `<li>${fdText(fd)}</li>`).join("")}</ul>`;
+    }
+    if (result.missingCount > 0) {
+      html += `<p class="check-banner err">Es fehlen noch ${result.missingCount} Abhängigkeit${result.missingCount === 1 ? "" : "en"}, die sich aus den Attributen ableiten lassen müssten.</p>`;
+    }
+    if (result.correct) {
+      html += `<p class="check-banner ok">✓ Richtig! Deine Abhängigkeiten entsprechen den echten Zusammenhängen. Weiter mit Schritt 2.</p>`;
+      state.fdsConfirmed = true;
+      els.decomposePhase.hidden = false;
+      renderEditor();
+      renderHintText();
+    }
+    showFdFeedback(html);
+  }
+
+  function showFdFeedback(html) {
+    els.fdFeedback.innerHTML = html;
+    els.fdFeedback.hidden = false;
+  }
+
+  function wireFdEvents() {
+    els.fdAddBtn.addEventListener("click", addFd);
+    els.fdCheckBtn.addEventListener("click", runFdCheck);
+    els.fdResetBtn.addEventListener("click", () => {
+      state.userFds = [];
+      state.fdAttrState = {};
+      els.fdFeedback.hidden = true;
+      renderFdPool();
+      renderFdPreview();
+      renderFdList();
+    });
+  }
+
+  /* ------------------------------------------------------------ phase 2: pool + editor tables */
   function poolAttrHtml(key) {
     const a = attr(key);
     const selected = state.selectedAttr === key ? " is-selected" : "";
@@ -165,7 +303,7 @@
   }
 
   function wireEditorEvents() {
-    document.querySelectorAll(".pool-attr").forEach(btn => {
+    document.querySelectorAll(".norm-editor .pool-attr").forEach(btn => {
       btn.addEventListener("click", () => {
         const key = btn.dataset.attr;
         state.selectedAttr = state.selectedAttr === key ? null : key;
@@ -333,16 +471,37 @@
     els.exDiff.textContent = diffLabel;
     els.exDiff.className = `ex-diff diff-${ex.level}`;
     els.exHint.hidden = true;
-    els.exHint.textContent = `${ex.hint} ${ex.goal}`;
+    renderHintText();
     els.exPrev.disabled = state.currentIndex === 0;
     els.exNext.disabled = state.currentIndex === NORMALIZATION_EXERCISES.length - 1;
     els.normTaskBody.innerHTML = ex.task;
     renderSource();
+    renderFdPool();
+    renderFdPreview();
+    renderFdList();
     renderEditor();
+  }
+
+  function renderHintText() {
+    const ex = currentExercise();
+    els.exHint.textContent = currentPhase() === "fds" ? ex.fdHint : `${ex.hint} ${ex.goal}`;
   }
 
   function showSolution() {
     const ex = currentExercise();
+    if (currentPhase() === "fds") {
+      state.userFds = ex.fds.map(fd => ({ lhs: [...fd.lhs], rhs: [...fd.rhs] }));
+      state.fdAttrState = {};
+      state.fdsConfirmed = true;
+      renderFdPool();
+      renderFdPreview();
+      renderFdList();
+      els.decomposePhase.hidden = false;
+      renderEditor();
+      renderHintText();
+      showFdFeedback(`<p class="check-banner ok">Abhängigkeiten eingefügt - weiter mit Schritt 2.</p>`);
+      return;
+    }
     state.tables = ex.solution.tables.map(t => {
       const table = makeTable(t.name);
       t.attrs.forEach(a => table.attrs.add(a));
@@ -376,14 +535,16 @@
     els.exHintBtn.addEventListener("click", () => { els.exHint.hidden = !els.exHint.hidden; });
     els.exSolutionBtn.addEventListener("click", showSolution);
     els.exPrev.addEventListener("click", () => {
-      if (state.currentIndex > 0) { state.currentIndex--; resetEditorState(); renderExercise(); }
+      if (state.currentIndex > 0) { state.currentIndex--; resetAllState(); renderExercise(); }
     });
     els.exNext.addEventListener("click", () => {
-      if (state.currentIndex < NORMALIZATION_EXERCISES.length - 1) { state.currentIndex++; resetEditorState(); renderExercise(); }
+      if (state.currentIndex < NORMALIZATION_EXERCISES.length - 1) { state.currentIndex++; resetAllState(); renderExercise(); }
     });
     els.addTableBtn.addEventListener("click", addTable);
     els.checkBtn.addEventListener("click", runCheck);
     els.resetEditorBtn.addEventListener("click", () => { resetEditorState(); renderEditor(); });
+
+    wireFdEvents();
 
     els.refNavLink.addEventListener("click", e => {
       if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) return;
@@ -400,7 +561,7 @@
   }
 
   function boot() {
-    resetEditorState();
+    resetAllState();
     renderExercise();
     renderNormProgressBadge();
     SqlUeben.renderNavProgress();

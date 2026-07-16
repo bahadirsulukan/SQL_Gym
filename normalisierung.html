@@ -7,17 +7,17 @@
 <link rel="icon" href="/favicon.png" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <title>Normalisierung · SQLgym</title>
-<meta name="description" content="Normalisierung interaktiv üben: eine unnormalisierte Tabelle per Drag-and-drop in mehrere Tabellen zerlegen, live geprüft auf Verlustfreiheit, Abhängigkeitserhaltung und Normalform.">
+<meta name="description" content="Normalisierung interaktiv üben: erst selbst die funktionalen Abhängigkeiten bestimmen, dann eine unnormalisierte Tabelle per Drag-and-drop zerlegen, live geprüft auf Verlustfreiheit, Abhängigkeitserhaltung und Normalform.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sqlgym-hda.vercel.app/normalisierung.html">
 <meta property="og:title" content="Normalisierung · SQLgym">
-<meta property="og:description" content="Normalisierung interaktiv üben: eine unnormalisierte Tabelle per Drag-and-drop in mehrere Tabellen zerlegen, live geprüft auf Verlustfreiheit, Abhängigkeitserhaltung und Normalform.">
+<meta property="og:description" content="Normalisierung interaktiv üben: erst selbst die funktionalen Abhängigkeiten bestimmen, dann eine unnormalisierte Tabelle per Drag-and-drop zerlegen, live geprüft auf Verlustfreiheit, Abhängigkeitserhaltung und Normalform.">
 <meta property="og:image" content="https://sqlgym-hda.vercel.app/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Normalisierung · SQLgym">
-<meta name="twitter:description" content="Normalisierung interaktiv üben: eine unnormalisierte Tabelle per Drag-and-drop in mehrere Tabellen zerlegen, live geprüft auf Verlustfreiheit, Abhängigkeitserhaltung und Normalform.">
+<meta name="twitter:description" content="Normalisierung interaktiv üben: erst selbst die funktionalen Abhängigkeiten bestimmen, dann eine unnormalisierte Tabelle per Drag-and-drop zerlegen, live geprüft auf Verlustfreiheit, Abhängigkeitserhaltung und Normalform.">
 <meta name="twitter:image" content="https://sqlgym-hda.vercel.app/og-image.png">
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -53,7 +53,7 @@
   <div class="section-inner">
     <p class="breadcrumb"><a href="/index.html">Start</a> / Normalisierung</p>
     <h1 class="page-title">Normalisierung üben</h1>
-    <p class="section-sub">Zerlege eine unnormalisierte Tabelle interaktiv in mehrere Tabellen: Attribut in eine Tabelle ziehen (oder anklicken, dann Zieltabelle anklicken), Primärschlüssel per Checkbox markieren, dann prüfen. Die Prüfung ist ergebnisbasiert: verlustfrei? abhängigkeitserhaltend? jede Tabelle in Boyce-Codd-Normalform?</p>
+    <p class="section-sub">In zwei Schritten: erst selbst die funktionalen Abhängigkeiten bestimmen, dann die Tabelle interaktiv in mehrere Tabellen zerlegen (per Drag-and-drop oder Klick), Primärschlüssel per Checkbox markieren. Beide Schritte werden automatisch geprüft: sind die Abhängigkeiten richtig erkannt? Ist die Zerlegung verlustfrei, abhängigkeitserhaltend, jede Tabelle in Boyce-Codd-Normalform?</p>
   </div>
 </section>
 
@@ -86,24 +86,57 @@
       <div class="norm-task-body" id="normTaskBody"></div>
     </div>
 
-    <div class="norm-editor">
-      <div class="norm-pool-wrap">
-        <span class="editor-label">Attribut-Pool (noch nicht zugewiesen)</span>
-        <div class="norm-pool" id="normPool"></div>
+    <div class="norm-phase" id="fdPhase">
+      <h3 class="phase-title"><span class="phase-num">Schritt 1</span> Funktionale Abhängigkeiten bestimmen</h3>
+      <p class="phase-instructions">Attribut anklicken: 1. Klick → linke Seite, 2. Klick → rechte Seite, 3. Klick → wieder entfernen. Dann als Abhängigkeit hinzufügen.</p>
+
+      <div class="norm-pool" id="fdPool"></div>
+
+      <div class="fd-builder-row">
+        <div class="fd-side">
+          <span class="editor-label">Linke Seite (bestimmt)</span>
+          <div class="fd-side-attrs" id="fdLhsPreview"><span class="fd-side-empty">-</span></div>
+        </div>
+        <span class="fd-arrow">&rarr;</span>
+        <div class="fd-side">
+          <span class="editor-label">Rechte Seite (wird bestimmt)</span>
+          <div class="fd-side-attrs" id="fdRhsPreview"><span class="fd-side-empty">-</span></div>
+        </div>
+        <button class="btn btn-plain" id="fdAddBtn">+ Hinzufügen</button>
       </div>
 
-      <div class="norm-tables" id="normTables"></div>
+      <div class="fd-list" id="fdList"></div>
 
-      <button class="btn btn-plain norm-add-table" id="addTableBtn">+ Neue Tabelle</button>
+      <div class="norm-actions">
+        <button class="btn btn-run" id="fdCheckBtn">Abhängigkeiten prüfen</button>
+        <button class="btn btn-plain" id="fdResetBtn">Zurücksetzen</button>
+      </div>
+
+      <div class="fd-feedback" id="fdFeedback" hidden></div>
     </div>
 
-    <div class="norm-actions">
-      <button class="btn btn-run" id="checkBtn">Prüfen</button>
-      <button class="btn btn-plain" id="resetEditorBtn">Zurücksetzen</button>
-    </div>
+    <div class="norm-phase" id="decomposePhase" hidden>
+      <h3 class="phase-title"><span class="phase-num">Schritt 2</span> Zerlegung</h3>
 
-    <div class="norm-feedback" id="normFeedback" hidden></div>
-    <div class="norm-solution-reveal" id="normSolutionReveal" hidden></div>
+      <div class="norm-editor">
+        <div class="norm-pool-wrap">
+          <span class="editor-label">Attribut-Pool (noch nicht zugewiesen)</span>
+          <div class="norm-pool" id="normPool"></div>
+        </div>
+
+        <div class="norm-tables" id="normTables"></div>
+
+        <button class="btn btn-plain norm-add-table" id="addTableBtn">+ Neue Tabelle</button>
+      </div>
+
+      <div class="norm-actions">
+        <button class="btn btn-run" id="checkBtn">Prüfen</button>
+        <button class="btn btn-plain" id="resetEditorBtn">Zurücksetzen</button>
+      </div>
+
+      <div class="norm-feedback" id="normFeedback" hidden></div>
+      <div class="norm-solution-reveal" id="normSolutionReveal" hidden></div>
+    </div>
   </div>
 </section>
 

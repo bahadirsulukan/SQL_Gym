@@ -33,6 +33,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["RID"], rhs: ["RName"] },
       { lhs: ["PID", "RID"], rhs: ["Datum", "Uhrzeit", "Anzahl"] }
     ],
+    fdHint: "Zwei Spalten sind als 'PK-Komponente' markiert - zusammen bilden sie den Schlüssel. Überlege: Wenn ich nur die PersonenID kenne (ohne RestaurantID), welche anderen Spalten liegen dann schon fest? Und welche liegen fest, wenn ich nur die RestaurantID kenne?",
     hint: "Der Primärschlüssel ist {PersonenID, RestaurantID}. NachnamePerson/TelefonPerson hängen nur von PersonenID ab, RestaurantName nur von RestaurantID - beides sind Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Person, Restaurant, Reservierung.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
     requireDependencyPreserving: true,
@@ -70,6 +71,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["LeserNr"], rhs: ["LeserName"] },
       { lhs: ["ISBN", "LeserNr"], rhs: ["Ausleihdatum", "Rueckgabedatum"] }
     ],
+    fdHint: "ISBN und LeserNr sind PK-Komponenten. Überlege: bestimmt die ISBN allein schon etwas (z. B. den Titel), unabhängig davon, wer das Buch gerade ausleiht? Und bestimmt die LeserNr allein schon etwas?",
     hint: "Der Primärschlüssel ist {ISBN, LeserNr} (vereinfachend: eine Leserin leiht ein Buch jeweils nur einmal gleichzeitig aus). Titel/Autor hängen nur von ISBN ab, LeserName nur von LeserNr - beides Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Buch, Leser, Ausleihe.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
     requireDependencyPreserving: true,
@@ -107,6 +109,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["ZimmerNr"], rhs: ["Zimmertyp"] },
       { lhs: ["GastNr", "ZimmerNr"], rhs: ["Anreise", "Abreise", "Preis"] }
     ],
+    fdHint: "GastNr und ZimmerNr sind PK-Komponenten. Was legt allein die ZimmerNr schon fest, unabhängig davon, welcher Gast bucht? Was legt allein die GastNr schon fest?",
     hint: "Der Primärschlüssel ist {GastNr, ZimmerNr} (vereinfachend: ein Gast bucht ein Zimmer jeweils nur einmal gleichzeitig). GastName hängt nur von GastNr ab, Zimmertyp nur von ZimmerNr - beides Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Gast, Zimmer, Buchung.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
     requireDependencyPreserving: true,
@@ -144,6 +147,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["FahrzeugNr"], rhs: ["Fahrzeugmodell"] },
       { lhs: ["KundenNr", "FahrzeugNr"], rhs: ["Mietbeginn", "Mietende", "Gesamtpreis"] }
     ],
+    fdHint: "KundenNr und FahrzeugNr sind PK-Komponenten. Was legt allein die KundenNr schon fest, unabhängig davon, welches Fahrzeug gemietet wird? Was legt allein die FahrzeugNr schon fest?",
     hint: "Der Primärschlüssel ist {KundenNr, FahrzeugNr} (vereinfachend: ein Kunde mietet ein Fahrzeug jeweils nur einmal gleichzeitig). KundenName hängt nur von KundenNr ab, Fahrzeugmodell nur von FahrzeugNr - beides Teilabhängigkeiten (2NF-Verletzung). Bilde drei Tabellen: Kunde, Fahrzeug, Miete.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
     requireDependencyPreserving: true,
@@ -177,6 +181,7 @@ const NORMALIZATION_EXERCISES = [
     fds: [
       { lhs: ["MitarbeiterNr"], rhs: ["Name", "Abteilung", "Ausweisnummer"] }
     ],
+    fdHint: "Es gibt nur eine PK-Komponente: MitarbeiterNr. Überlege, ob es zusätzlich noch eine Abhängigkeit zwischen zwei Nicht-Schlüssel-Attributen gibt (z. B. bestimmt die Abteilung vielleicht die Ausweisnummer oder umgekehrt?) - falls nicht, gibt es hier nur eine einzige, 'große' Abhängigkeit.",
     hint: "Es gibt nur einen einzigen Schlüsselkandidaten: {MitarbeiterNr}. Ein einzelnes Attribut als Schlüssel kann per Definition keine Teilabhängigkeit (2NF-Verletzung) erzeugen, da es keine 'echte Teilmenge' des Schlüssels gibt. Prüfe, ob zwischen den Nicht-Schlüssel-Attributen selbst eine Abhängigkeit besteht (transitive Abhängigkeit) - falls nicht, ist die Tabelle schon fertig normalisiert.",
     goal: "Ziel dieser Aufgabe: nicht jede 0NF-Tabelle muss zerlegt werden. Prüfe bewusst nach, bevor du Tabellen anlegst - manchmal ist eine Relation schon in BCNF.",
     requireDependencyPreserving: true,
@@ -217,6 +222,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["V", "N", "G"], rhs: ["A"] },
       { lhs: ["V", "N", "G", "P"], rhs: ["E"] }
     ],
+    fdHint: "PID ist eine PK-Komponente. Bestimmt PID vielleicht noch etwas anderes als nur den Stundensatz? Und bestimmt dieses 'etwas andere' dann wiederum noch etwas weiteres (eine Kettenreaktion, keine direkte Abhängigkeit von PID)?",
     hint: "Schlüsselkandidat ist {Vorname,Nachname,GebDatum,PID}. Ausbildung hängt nur vom Personenteil ab, Projekt nur von PID - beides Teilabhängigkeiten (2NF). Aber Vorsicht: Min/Tag hängt nicht direkt von PID ab, sondern von Projekt - und Projekt selbst ist kein Schlüssel. Das ist eine zusätzliche transitive Abhängigkeit (3NF), die eine eigene, vierte Tabelle braucht.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF. Achtung: hier reichen 3 Tabellen nicht ganz - es braucht 4.",
     requireDependencyPreserving: true,
@@ -260,6 +266,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["DozentName"], rhs: ["DozentBuero"] },
       { lhs: ["MatrikelNr", "SeminarNr"], rhs: ["Note"] }
     ],
+    fdHint: "SeminarNr bestimmt sicher den Seminartitel und die Dozentin. Aber bestimmt die Dozentin selbst noch etwas Zusätzliches, das nicht direkt von der SeminarNr, sondern nur indirekt über die Dozentin abhängt?",
     hint: "Schlüsselkandidat ist {MatrikelNr,SeminarNr}. StudentName hängt nur von MatrikelNr ab, SeminarTitel/DozentName nur von SeminarNr - beides Teilabhängigkeiten (2NF). Aber Vorsicht: DozentBuero hängt nicht direkt von SeminarNr ab, sondern von DozentName - eine zusätzliche transitive Abhängigkeit (3NF), die eine eigene, vierte Tabelle braucht.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF. Achtung: hier reichen 3 Tabellen nicht ganz - es braucht 4.",
     requireDependencyPreserving: true,
@@ -300,6 +307,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["ProjektNr"], rhs: ["Projektname"] },
       { lhs: ["MitarbeiterNr", "ProjektNr", "Jahr"], rhs: ["Stunden"] }
     ],
+    fdHint: "Der Schlüssel hat hier drei Komponenten. Was legt allein die MitarbeiterNr schon fest, unabhängig von Projekt und Jahr? Was legt allein die ProjektNr schon fest?",
     hint: "Der Primärschlüssel besteht hier aus drei Teilen: {MitarbeiterNr, ProjektNr, Jahr}. MitarbeiterName hängt nur vom Teil MitarbeiterNr ab, Projektname nur vom Teil ProjektNr - beides Teilabhängigkeiten (2NF-Verletzung), obwohl der Schlüssel diesmal drei statt zwei Komponenten hat. Bilde drei Tabellen: Mitarbeiter, Projekt, Erfassung.",
     goal: "Ziel: verlustfrei, abhängigkeitserhaltend, jede Tabelle in BCNF.",
     requireDependencyPreserving: true,
@@ -334,6 +342,7 @@ const NORMALIZATION_EXERCISES = [
       { lhs: ["S", "K"], rhs: ["D"] },
       { lhs: ["D"], rhs: ["K"] }
     ],
+    fdHint: "Die naheliegende Abhängigkeit ist {Student,Kurs} → Dozentin (der volle Schlüssel bestimmt alles). Aber überlege genauer: bestimmt vielleicht schon eine EINZELNE Spalte allein eine andere, ohne die restlichen zu brauchen? Die Aufgabenbeschreibung gibt dafür einen Hinweis.",
     hint: "Es gibt zwei Schlüsselkandidaten: {Student,Kurs} und {Student,Dozentin} (da Dozentin → Kurs gilt, kann man Kurs in der Kombination durch Dozentin ersetzen). Damit sind alle drei Attribute Schlüsselattribute - die Tabelle ist automatisch in 3NF. Für BCNF müsste man wegen Dozentin → Kurs trotzdem aufteilen: (Student,Dozentin) und (Dozentin,Kurs).",
     goal: "Ziel dieser Aufgabe: zerlege nach BCNF (Dozentin → Kurs ist die Verletzung). Prüfe danach im Ergebnis, was mit der Abhängigkeit {Student,Kurs} → Dozentin passiert - genau das ist die Erkenntnis dieser Aufgabe.",
     requireDependencyPreserving: false,
