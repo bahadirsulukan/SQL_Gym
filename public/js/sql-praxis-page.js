@@ -51,13 +51,22 @@
     els.praxisProgress.textContent = `${SqlUeben.praxisSolvedCount()} / ${SQL_PRAXIS_EXERCISES.length} gelöst`;
   }
 
-  /* ------------------------------------------------------------ schema */
+  /* ------------------------------------------------------------ schema/db lookup */
+  // Aufgaben nutzen entweder eine Datenbank aus dem globalen DATABASES-Katalog
+  // (dbId) oder ein eigenstaendiges Uebungsschema (customSchema), das nicht im
+  // Datenbanken-Picker auftaucht.
+  function getExerciseDb(ex) {
+    return ex.customSchema
+      ? SqlUeben.createFreshDbFromSql(ex.customSchema.sql)
+      : SqlUeben.createFreshDbInstance(ex.dbId);
+  }
+
   function renderSchema(ex) {
     if (ex.category === "concept") {
       els.praxisSchema.hidden = true;
       return;
     }
-    const def = DATABASES.find(d => d.id === ex.dbId);
+    const def = ex.customSchema || DATABASES.find(d => d.id === ex.dbId);
     els.praxisSchemaLabel.textContent = `Schema: ${def.name}`;
     els.praxisSchemaGrid.innerHTML = Object.entries(def.schema).map(([table, cols]) => `
       <div class="schema-table">
@@ -148,7 +157,7 @@
 
     let db;
     try {
-      db = SqlUeben.createFreshDbInstance(ex.dbId);
+      db = getExerciseDb(ex);
     } catch (err) {
       showBanner("err", `Fehler: ${err.message}`);
       return;
@@ -187,12 +196,11 @@
       return;
     }
 
-    // checkType "select" (default)
+    // checkType "select" (default). postAction darf hier fehlschlagen (z.B.
+    // wenn ein korrekter ablehnender Trigger den Testschritt per RAISE(ABORT,...)
+    // verhindert) - das ist kein Nutzerfehler, verify entscheidet trotzdem.
     if (ex.postAction) {
-      try { db.run(ex.postAction); } catch (err) {
-        showBanner("err", `Fehler beim Testschritt: ${err.message}`);
-        return;
-      }
+      try { db.run(ex.postAction); } catch (err) { /* kann beabsichtigt sein */ }
     }
 
     let result;
@@ -204,14 +212,21 @@
     }
     renderResultTable(result);
 
-    let expectedDb, expected;
+    let expectedDb;
     try {
-      expectedDb = SqlUeben.createFreshDbInstance(ex.dbId);
+      expectedDb = getExerciseDb(ex);
       expectedDb.run(ex.solution);
-      if (ex.postAction) expectedDb.run(ex.postAction);
-      expected = expectedDb.exec(ex.verify);
     } catch (err) {
       // Musterlösung sollte nie fehlschlagen - falls doch, kein Nutzerfehler.
+      return;
+    }
+    if (ex.postAction) {
+      try { expectedDb.run(ex.postAction); } catch (err) { /* kann beabsichtigt sein */ }
+    }
+    let expected;
+    try {
+      expected = expectedDb.exec(ex.verify);
+    } catch (err) {
       return;
     }
 

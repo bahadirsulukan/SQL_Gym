@@ -14,10 +14,49 @@
      "select"   (default) - postAction (optional) laeuft, dann verify-SELECT.
                  Ergebnis wird mit dem Ergebnis von solution+postAction+verify
                  auf einer zweiten frischen Instanz verglichen (rowsMatchAsSet).
+                 postAction darf dabei einen Fehler werfen (z.B. RAISE(ABORT,...)
+                 in einem ablehnenden BEFORE-Trigger) - das wird nicht als
+                 Nutzerfehler behandelt, verify entscheidet trotzdem ueber richtig/falsch.
      "throws"   - testSql muss nach dem User-SQL einen Fehler werfen (z.B.
                  UNIQUE-Constraint-Verletzung).
      "succeeds" - testSql darf nach dem User-SQL KEINEN Fehler werfen.
+
+   Aufgaben koennen entweder dbId (Datenbank aus dem globalen DATABASES-
+   Katalog, siehe databases.js) ODER customSchema (ein eigenstaendiges Schema
+   nur fuer SQL-Praxis-Aufgaben, taucht nicht im Datenbanken-Picker auf) nutzen.
    ========================================================================== */
+
+// Eigenes Uebungsschema fuer Trigger-Aufgaben rund um Rechnungen/Positionen -
+// bewusst NICHT im globalen DATABASES-Katalog, da es keine eigene
+// SELECT-Uebungsseite braucht.
+const RECHNUNG_SCHEMA = {
+  name: "Rechnungswesen (Übungsschema)",
+  schema: {
+    Produkt: [["ProdNr", "INT", "pk"], ["ProdName", "TEXT"], ["ProdPreis", "REAL"], ["Lagerbestand", "INT"]],
+    Mitarbeiter: [["MitarbeiterNr", "INT", "pk"], ["Name", "TEXT"], ["Gehalt", "REAL"], ["VorgesetzterNr", "INT", "fk"], ["AbteilungNr", "INT"]],
+    Rechnung: [["RNr", "INT", "pk"], ["Datum", "TEXT"], ["GesPreis", "REAL"]],
+    Position: [["RNr", "INT", "pk/fk"], ["PositionsNr", "INT", "pk"], ["ProdNr", "INT", "fk"], ["Anzahl", "INT"]]
+  },
+  sql: `
+    CREATE TABLE Produkt (ProdNr INTEGER PRIMARY KEY, ProdName TEXT, ProdPreis REAL, Lagerbestand INTEGER);
+    CREATE TABLE Mitarbeiter (
+      MitarbeiterNr INTEGER PRIMARY KEY, Name TEXT, Gehalt REAL, VorgesetzterNr INTEGER, AbteilungNr INTEGER,
+      FOREIGN KEY (VorgesetzterNr) REFERENCES Mitarbeiter(MitarbeiterNr)
+    );
+    CREATE TABLE Rechnung (RNr INTEGER PRIMARY KEY, Datum TEXT, GesPreis REAL);
+    CREATE TABLE Position (
+      RNr INTEGER, PositionsNr INTEGER, ProdNr INTEGER, Anzahl INTEGER,
+      PRIMARY KEY (RNr, PositionsNr),
+      FOREIGN KEY (RNr) REFERENCES Rechnung(RNr),
+      FOREIGN KEY (ProdNr) REFERENCES Produkt(ProdNr)
+    );
+
+    INSERT INTO Produkt VALUES (1,'Kaffeetasse',8,50), (2,'Teekanne',25,30), (3,'Untertasse',4,5);
+    INSERT INTO Mitarbeiter VALUES (1,'Anna Chef',8000,NULL,10), (2,'Bernd Team',5000,1,10);
+    INSERT INTO Rechnung VALUES (1,'2026-01-10',16);
+    INSERT INTO Position VALUES (1,1,1,2);
+  `
+};
 
 const SQL_PRAXIS_EXERCISES = [
 
@@ -140,6 +179,126 @@ END;`,
     checkType: "select",
     postAction: "INSERT INTO Mitarbeiter VALUES (11,'Stark','Ida',2,150000,'2026-05-01',1);",
     verify: "SELECT Gehalt FROM Mitarbeiter WHERE MitarbeiterNr = 11;"
+  },
+  {
+    id: "trig3",
+    category: "trigger",
+    level: 1,
+    customSchema: RECHNUNG_SCHEMA,
+    title: "Mindestpreis per Trigger",
+    question: "Erstelle einen Trigger, der beim Einfügen eines neuen Produkts dafür sorgt, dass ProdPreis mindestens 5 beträgt. Ist der eingefügte Preis niedriger, soll er auf 5 korrigiert werden.",
+    hint: "SQLite kann NEW-Werte in einem BEFORE-Trigger nicht direkt verändern (anders als Postgres). Nutze stattdessen AFTER INSERT mit einer WHEN-Bedingung und einem UPDATE auf die neue Zeile.",
+    solution: `CREATE TRIGGER preis_mindestwert
+AFTER INSERT ON Produkt
+FOR EACH ROW
+WHEN NEW.ProdPreis < 5
+BEGIN
+  UPDATE Produkt SET ProdPreis = 5 WHERE ProdNr = NEW.ProdNr;
+END;`,
+    checkType: "select",
+    postAction: "INSERT INTO Produkt (ProdNr, ProdName, ProdPreis, Lagerbestand) VALUES (99, 'Testprodukt', 2, 100);",
+    verify: "SELECT ProdPreis FROM Produkt WHERE ProdNr = 99;"
+  },
+  {
+    id: "trig4",
+    category: "trigger",
+    level: 2,
+    customSchema: RECHNUNG_SCHEMA,
+    title: "Rechnungssumme bei neuer Position",
+    question: "Erstelle einen Trigger, der beim Einfügen einer neuen Position automatisch GesPreis der zugehörigen Rechnung um (ProdPreis * Anzahl) erhöht.",
+    hint: "AFTER INSERT ON Position. Der Produktpreis kommt per Subquery aus Produkt, da SQLite kein SELECT ... INTO in Triggern kennt.",
+    solution: `CREATE TRIGGER position_erhoeht_gespreis
+AFTER INSERT ON Position
+FOR EACH ROW
+BEGIN
+  UPDATE Rechnung
+  SET GesPreis = GesPreis + (SELECT ProdPreis FROM Produkt WHERE ProdNr = NEW.ProdNr) * NEW.Anzahl
+  WHERE RNr = NEW.RNr;
+END;`,
+    checkType: "select",
+    postAction: "INSERT INTO Position (RNr, PositionsNr, ProdNr, Anzahl) VALUES (1, 2, 2, 1);",
+    verify: "SELECT GesPreis FROM Rechnung WHERE RNr = 1;"
+  },
+  {
+    id: "trig5",
+    category: "trigger",
+    level: 2,
+    customSchema: RECHNUNG_SCHEMA,
+    title: "Rechnungssumme bei gelöschter Position",
+    question: "Erstelle einen Trigger, der beim Löschen einer Position GesPreis der zugehörigen Rechnung wieder verringert (Umkehrung der vorherigen Aufgabe).",
+    hint: "AFTER DELETE ON Position. In DELETE-Triggern gibt es nur OLD, kein NEW.",
+    solution: `CREATE TRIGGER position_verringert_gespreis
+AFTER DELETE ON Position
+FOR EACH ROW
+BEGIN
+  UPDATE Rechnung
+  SET GesPreis = GesPreis - (SELECT ProdPreis FROM Produkt WHERE ProdNr = OLD.ProdNr) * OLD.Anzahl
+  WHERE RNr = OLD.RNr;
+END;`,
+    checkType: "select",
+    postAction: "DELETE FROM Position WHERE RNr = 1 AND PositionsNr = 1;",
+    verify: "SELECT GesPreis FROM Rechnung WHERE RNr = 1;"
+  },
+  {
+    id: "trig6",
+    category: "trigger",
+    level: 3,
+    customSchema: RECHNUNG_SCHEMA,
+    title: "Rechnungssumme bei geänderter Anzahl",
+    question: "Erstelle einen Trigger, der beim Ändern (UPDATE) der Anzahl in einer Position GesPreis um die Differenz zwischen neuer und alter Anzahl anpasst.",
+    hint: "AFTER UPDATE OF Anzahl ON Position. Hier stehen sowohl OLD als auch NEW zur Verfügung.",
+    solution: `CREATE TRIGGER position_update_gespreis
+AFTER UPDATE OF Anzahl ON Position
+FOR EACH ROW
+BEGIN
+  UPDATE Rechnung
+  SET GesPreis = GesPreis + (SELECT ProdPreis FROM Produkt WHERE ProdNr = NEW.ProdNr) * (NEW.Anzahl - OLD.Anzahl)
+  WHERE RNr = NEW.RNr;
+END;`,
+    checkType: "select",
+    postAction: "UPDATE Position SET Anzahl = 5 WHERE RNr = 1 AND PositionsNr = 1;",
+    verify: "SELECT GesPreis FROM Rechnung WHERE RNr = 1;"
+  },
+  {
+    id: "trig7",
+    category: "trigger",
+    level: 3,
+    customSchema: RECHNUNG_SCHEMA,
+    title: "Gehaltsdeckel (Rechnungswesen)",
+    question: "Erstelle einen Trigger, der beim Einfügen eines neuen Mitarbeiters dessen Gehalt automatisch auf das Gehalt des direkten Vorgesetzten deckelt, falls es höher wäre (nur wenn ein Vorgesetzter existiert).",
+    hint: "AFTER INSERT ON Mitarbeiter, WHEN NEW.VorgesetzterNr IS NOT NULL AND NEW.Gehalt > (Gehalt des Vorgesetzten).",
+    solution: `CREATE TRIGGER gehaltsdeckel_rechnungswesen
+AFTER INSERT ON Mitarbeiter
+FOR EACH ROW
+WHEN NEW.VorgesetzterNr IS NOT NULL
+  AND NEW.Gehalt > (SELECT Gehalt FROM Mitarbeiter WHERE MitarbeiterNr = NEW.VorgesetzterNr)
+BEGIN
+  UPDATE Mitarbeiter
+  SET Gehalt = (SELECT Gehalt FROM Mitarbeiter WHERE MitarbeiterNr = NEW.VorgesetzterNr)
+  WHERE MitarbeiterNr = NEW.MitarbeiterNr;
+END;`,
+    checkType: "select",
+    postAction: "INSERT INTO Mitarbeiter (MitarbeiterNr, Name, Gehalt, VorgesetzterNr, AbteilungNr) VALUES (99, 'Test Mitarbeiter', 9000, 1, 10);",
+    verify: "SELECT Gehalt FROM Mitarbeiter WHERE MitarbeiterNr = 99;"
+  },
+  {
+    id: "trig8",
+    category: "trigger",
+    level: 3,
+    customSchema: RECHNUNG_SCHEMA,
+    title: "Lagerbestand-Prüfung per Trigger",
+    question: "Erstelle einen Trigger, der das Einfügen einer Position verhindert, wenn die bestellte Anzahl größer als der Lagerbestand des Produkts ist.",
+    hint: "BEFORE INSERT ON Position - hier musst du nichts an NEW ändern, sondern nur ablehnen. In SQLite mit SELECT RAISE(ABORT, 'Nachricht') innerhalb des Trigger-Bodies (SQLite-Äquivalent zu RAISE EXCEPTION in Postgres).",
+    solution: `CREATE TRIGGER lagerbestand_pruefung
+BEFORE INSERT ON Position
+FOR EACH ROW
+WHEN NEW.Anzahl > (SELECT Lagerbestand FROM Produkt WHERE ProdNr = NEW.ProdNr)
+BEGIN
+  SELECT RAISE(ABORT, 'Nicht genug Lagerbestand');
+END;`,
+    checkType: "select",
+    postAction: "INSERT INTO Position (RNr, PositionsNr, ProdNr, Anzahl) VALUES (1, 2, 3, 10);",
+    verify: "SELECT COUNT(*) AS AnzahlZeilen FROM Position WHERE RNr = 1 AND PositionsNr = 2;"
   },
 
   /* ------------------------------------------------------------ CONCEPT (Stored Procedure / JDBC) */

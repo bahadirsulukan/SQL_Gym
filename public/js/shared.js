@@ -44,6 +44,15 @@ const SqlUeben = (function () {
     return db;
   }
 
+  // Wie createFreshDbInstance, aber fuer Uebungsschemas, die nicht Teil des
+  // globalen DATABASES-Katalogs sind (z.B. ein Schema, das nur fuer ein paar
+  // SQL-Praxis-Aufgaben existiert und keine eigene Datenbank-Seite braucht).
+  function createFreshDbFromSql(sql) {
+    const db = new SQL.Database();
+    db.run(sql);
+    return db;
+  }
+
   function formatCell(cell) {
     if (cell === null) return `<span class="cell-null">NULL</span>`;
     if (typeof cell === "number" && !Number.isInteger(cell)) return cell.toFixed(2);
@@ -216,7 +225,7 @@ const SqlUeben = (function () {
   }
 
   return {
-    bootSqlJsEngine, execQuery, createFreshDbInstance, formatCell, normalizeRows, formatSql,
+    bootSqlJsEngine, execQuery, createFreshDbInstance, createFreshDbFromSql, formatCell, normalizeRows, formatSql,
     rowsMatchExact, rowsMatchAsSet,
     loadProgress, saveProgress, markSolved, isSolved, solvedCount, totalCount, totalSolved,
     resetProgress, renderNavProgress, wireBackToTop,
